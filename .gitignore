@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Django
+*.log
+local_settings.py
+staticfiles/
+
+# SQLite (descomentar si no deseas subir la base de datos de pruebas local)
+# *.sqlite3
+
+# Copias de seguridad y archivos temporales
+*.zip
+*.tar.gz
+*.rar
+backup_*.zip
+
+# Entorno y credenciales
+.env
+.env.*
+
+# IDE / Editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store

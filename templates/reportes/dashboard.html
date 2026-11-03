@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | Santiago Glass{% endblock %}
+{% block page_title %}Dashboard General{% endblock %}
+
+{% block content %}
+<!-- Tarjetas de Estadísticas -->
+<div class="grid-4 fade-in">
+    <!-- Stat 1 -->
+    <div class="stat-card" style="--hover-color: var(--blue); --hover-glow: rgba(59, 130, 246, 0.4);">
+        <div class="stat-icon" style="color: var(--blue); background: rgba(59, 130, 246, 0.1);">
+            <i class="bi bi-people"></i>
+        </div>
+        <div class="stat-title">Total Clientes</div>
+        <div class="stat-val">{{ stats.clientes }}</div>
+    </div>
+    <!-- Stat 2 -->
+    <div class="stat-card" style="--hover-color: var(--red); --hover-glow: var(--red-glow);">
+        <div class="stat-icon" style="color: var(--red); background: rgba(244, 63, 94, 0.1);">
+            <i class="bi bi-file-earmark-text"></i>
+        </div>
+        <div class="stat-title">Cotizaciones del Mes</div>
+        <div class="stat-val">{{ stats.cotizaciones_mes }}</div>
+    </div>
+    <!-- Stat 3 -->
+    <div class="stat-card" style="--hover-color: var(--gold); --hover-glow: var(--gold-glow);">
+        <div class="stat-icon" style="color: var(--gold); background: rgba(251, 191, 36, 0.1);">
+            <i class="bi bi-clock-history"></i>
+        </div>
+        <div class="stat-title">Proyectos Pendientes</div>
+        <div class="stat-val">{{ stats.proyectos_pendientes }}</div>
+    </div>
+    <!-- Stat 4 -->
+    <div class="stat-card" style="--hover-color: var(--green); --hover-glow: rgba(16, 185, 129, 0.4);">
+        <div class="stat-icon" style="color: var(--green); background: rgba(16, 185, 129, 0.1);">
+            <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="stat-title">Proyectos Finalizados</div>
+        <div class="stat-val">{{ stats.proyectos_finalizados }}</div>
+    </div>
+</div>
+
+<div class="grid-7-3 fade-in" style="animation-delay: 0.1s;">
+    
+    <!-- LADO IZQUIERDO: Cotizaciones Recientes -->
+    <div class="card">
+        <div class="card-header">
+            <span><i class="bi bi-file-text" style="color: var(--red); margin-right: 8px;"></i> Últimas Cotizaciones</span>
+            <a href="{% url 'lista_cotizaciones' %}" class="btn btn-ghost btn-sm">Ver todas</a>
+        </div>
+        <div class="card-body-0 table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Cliente</th>
+                        <th>Fecha</th>
+                        <th>Monto ($us)</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in recientes %}
+                    <tr>
+                        <td style="font-weight: 700;">{{ c.numero }}</td>
+                        <td>{{ c.cliente.nombre_completo }}</td>
+                        <td style="color: var(--text-dim);">{{ c.fecha|date:"d M Y" }}</td>
+                        <td style="font-weight: 600;">$us {{ c.total }}</td>
+                        <td><span class="badge badge-{{ c.estado }}">{{ c.get_estado_display }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 2rem;">No hay cotizaciones recientes.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- LADO DERECHO: Accesos y Gráfica -->
+    <div>
+        <!-- Accesos Rápidos -->
+        <div class="card mb-24">
+            <div class="card-header">Acciones Rápidas</div>
+            <div class="card-body action-grid">
+                <a href="{% url 'nueva_cotizacion' %}" class="action-card">
+                    <div class="action-icon"><i class="bi bi-plus-lg"></i></div>
+                    <div class="action-info">
+                        <strong>Nueva Cotización</strong>
+                        <span>Crear y generar PDF</span>
+                    </div>
+                </a>
+                <a href="{% url 'nuevo_cliente' %}" class="action-card">
+                    <div class="action-icon" style="color: var(--blue); background: rgba(59,130,246,0.1);"><i class="bi bi-person-plus"></i></div>
+                    <div class="action-info">
+                        <strong>Nuevo Cliente</strong>
+                        <span>Registrar en base de datos</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Gráfica de Estados -->
+        <div class="card">
+            <div class="card-header">Proyectos Activos</div>
+            <div class="card-body">
+                <canvas id="estadoChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('estadoChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['En Curso', 'Pendientes', 'Aprobados'],
+                datasets: [{
+                    data: [{{ stats.proy_curso|default:0 }}, {{ stats.proy_pendientes|default:0 }}, {{ stats.proy_aprobados|default:0 }}],
+                    backgroundColor: [
+                        '#fbbf24', // gold
+                        '#94a3b8', // slate
+                        '#34d399'  // green
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#f8fafc', font: { family: 'Inter' } } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+

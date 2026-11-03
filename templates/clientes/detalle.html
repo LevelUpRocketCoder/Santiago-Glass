@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}{{ cliente.nombre_completo }} — Santiago Glass{% endblock %}
+{% block page_title %}Detalle de Cliente{% endblock %}
+{% block extra_css %}
+<style>
+    .profile-card { background: white; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+    .profile-banner { background: linear-gradient(135deg, var(--primary), #1e3a8a); padding: 2rem; text-align: center; color: white; }
+    .profile-avatar { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, var(--secondary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: white; margin: 0 auto 1rem; }
+    .profile-body { padding: 1.5rem; }
+    .info-item { display: flex; align-items: center; gap: 10px; padding: 0.6rem 0; font-size: 0.9rem; }
+    .info-item i { color: var(--text-muted); width: 20px; text-align: center; }
+    .hist-table { width: 100%; }
+    .hist-table th { padding: 0.75rem 1.25rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 700; background: #f8fafc; border-bottom: 1px solid var(--border); }
+    .hist-table td { padding: 0.9rem 1.25rem; font-size: 0.88rem; border-bottom: 1px solid #f1f5f9; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="row g-4"><div class="col-md-4"><div class="profile-card"><div class="profile-banner"><div class="profile-avatar">{{ cliente.nombre_completo|first|upper }}</div><div style="font-size:1.25rem; font-weight:700;">{{ cliente.nombre_completo }}</div></div><div class="profile-body"><div class="info-item"><i class="bi bi-telephone-fill"></i> {{ cliente.telefono }}</div><div class="info-item"><i class="bi bi-envelope-fill"></i> {{ cliente.email|default:"—" }}</div><div class="info-item"><i class="bi bi-geo-alt-fill"></i> {{ cliente.direccion|default:"—" }}</div><hr><div class="d-flex gap-2"><a href="{% url 'editar_cliente' cliente.pk %}" class="btn btn-outline-secondary btn-sm" style="border-radius:10px;"><i class="bi bi-pencil me-1"></i> Editar</a><a href="{% url 'nueva_cotizacion' %}?cliente={{ cliente.pk }}" class="btn btn-primary btn-sm" style="border-radius:10px;"><i class="bi bi-file-earmark-plus me-1"></i> Cotizar</a></div></div></div></div><div class="col-md-8"><div style="background:white; border:1px solid var(--border); border-radius:18px; overflow:hidden;"><div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); font-weight:700;"><i class="bi bi-clock-history me-2 text-muted"></i>Historial</div><div class="table-responsive"><table class="hist-table"><thead><tr><th>N°</th><th>Fecha</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>{% for c in cotizaciones %}<tr><td class="fw-bold" style="color:var(--secondary);">{{ c.numero }}</td><td class="text-muted">{{ c.fecha|date:"d M, Y" }}</td><td class="fw-bold">Bs {{ c.total|floatformat:2 }}</td><td><span class="badge" style="background:#dbeafe; color:#1d4ed8; font-size:0.72rem; padding:4px 10px; border-radius:8px;">{{ c.get_estado_display }}</span></td><td><a href="{% url 'detalle_cotizacion' c.pk %}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;"><i class="bi bi-eye"></i></a></td></tr>{% empty %}<tr><td colspan="5" class="text-center text-muted py-4">Sin cotizaciones</td></tr>{% endfor %}</tbody></table></div></div></div></div>
+{% endblock %}

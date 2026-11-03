@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block title %}Nueva Cotización{% endblock %}
+{% block page_title %}Nueva Cotización{% endblock %}
+{% block content %}
+<form method="post" id="frm">
+{% csrf_token %}
+<input type="hidden" name="items_json" id="items_json">
+
+<div class="grid-7-3">
+  <!-- LEFT -->
+  <div>
+    <!-- Datos -->
+    <div class="card fade-in mb-24">
+      <div class="card-header"><span><i class="bi bi-person" style="margin-right:8px;color:var(--red)"></i>Datos de la Cotización</span></div>
+      <div class="card-body">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Cliente *</label>
+            <select name="cliente_id" class="form-select" id="sel_cli" required>
+              <option value="">— Seleccionar cliente —</option>
+              {% for c in clientes %}<option value="{{ c.pk }}" {% if cli_pre == c.pk|stringformat:"i" %}selected{% endif %}>{{ c.nombre_completo }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha *</label>
+            <input type="date" name="fecha" class="form-control" value="{{ hoy }}" required>
+          </div>
+        </div>
+
+        <!-- TIPO DE CAMBIO -->
+        <div class="tc-banner">
+          <div class="tc-icon"><i class="bi bi-currency-exchange"></i></div>
+          <div class="tc-info">
+            <div class="tc-label">Tipo de Cambio del Dólar</div>
+            <div class="tc-sub">Ingresa el valor actual del mercado paralelo en Bolivia</div>
+          </div>
+          <div class="tc-input-wrap">
+            <span class="tc-prefix">$us 1 =</span>
+            <input type="number" name="tipo_cambio" id="tipo_cambio"
+                   class="tc-input" value="6.97" min="1" step="0.01"
+                   oninput="calcTotal()" required>
+            <span class="tc-suffix">Bs</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Obra / Proyecto</label>
+          <input type="text" name="obra" class="form-control" placeholder="Ej: Oficinas, Departamento Torre A..." value="{{ obra|default:'' }}">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Observaciones</label>
+          <textarea name="observaciones" class="form-control" rows="2" placeholder="Condiciones especiales, garantías, notas de instalación..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <div class="card fade-in">
+      <div class="card-header">
+        <span><i class="bi bi-list-ul" style="margin-right:8px;color:var(--red)"></i>Ítems de la Cotización</span>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="addRow()"><i class="bi bi-plus-lg"></i> Agregar ítem</button>
+      </div>
+      <div class="card-body-0">
+        <div class="table-wrap">
+          <table class="items-table">
+            <thead><tr>
+              <th style="width:38%">Descripción / Detalle</th>
+              <th style="width:12%">Unidad</th>
+              <th style="width:13%">Cantidad (M2)</th>
+              <th style="width:15%">Precio $us</th>
+              <th style="width:14%">Subtotal $us</th>
+              <th style="width:8%"></th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        
+        <!-- TOTAL DUAL -->
+        <div class="total-dual">
+          <div class="total-dual-row">
+            <div>
+              <div class="total-label">TOTAL EN DÓLARES</div>
+              <div class="total-value" id="total_display">$us 0.00</div>
+            </div>
+            <div class="total-divider"></div>
+            <div style="text-align:right">
+              <div class="total-label">EQUIVALENTE EN BOLIVIANOS</div>
+              <div class="total-value-bs" id="total_bs">Bs 0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div>
+    <div class="card fade-in" style="margin-bottom:16px">
+      <div class="card-header"><span><i class="bi bi-grid-3x3-gap" style="margin-right:8px;color:var(--red)"></i>Catálogo</span></div>
+      <div class="card-body" style="padding:14px">
+        <div class="search-wrap" style="margin-bottom:10px; position:relative;">
+          <i class="bi bi-search" style="position:absolute; left:12px; top:12px; color:var(--text-dim)"></i>
+          <input type="text" id="filtro" class="form-control" placeholder="Buscar producto..." style="padding-left:36px;">
+        </div>
+        <div style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:6px" id="prod_list">
+          {% for p in productos %}
+          <div class="prod-item" onclick="useProduct('{{ p.pk }}','{{ p.descripcion|default:p.nombre|escapejs }}','{{ p.unidad_medida }}',{{ p.precio_unitario }})"
+               data-name="{{ p.nombre|lower }}">
+            <div class="prod-item-name">{{ p.nombre }}</div>
+            <div class="flex-center gap-8 mt-4">
+              <span class="prod-item-price">$us {{ p.precio_unitario }}</span>
+              <span class="prod-item-unit">/ {{ p.get_unidad_medida_display }}</span>
+            </div>
+          </div>
+          {% empty %}
+          <div class="empty-state" style="padding:20px; text-align:center; color:var(--text-dim);"><i class="bi bi-grid-3x3-gap"></i><p>Sin productos. <a href="{% url 'nuevo_producto' %}" style="color:var(--red)">Agregar</a></p></div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button type="submit" class="btn btn-red w-full" onclick="prepEnvio()" style="padding:13px;font-size:15px; justify-content:center;">
+        <i class="bi bi-save"></i> Guardar Cotización
+      </button>
+      <a href="{% url 'lista_cotizaciones' %}" class="btn btn-ghost w-full" style="justify-content:center">Cancelar</a>
+    </div>
+  </div>
+</div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let items = []; let cnt = 0;
+function addRow(pid='', desc='', unidad='m2', precio=0) {
+  const id = ++cnt;
+  const idx = items.length;
+  items.push({id, pid, desc, unidad, qty:0, price:precio});
+  const tr = document.createElement('tr');
+  tr.id = `r${id}`;
+  tr.innerHTML = `
+    <td><input type="text" value="${desc}" class="form-control" placeholder="Descripción del ítem" onchange="items[${idx}].desc=this.value" style="padding:6px; font-size:13px;"></td>
+    <td><select class="form-select" onchange="items[${idx}].unidad=this.value" style="padding:6px; font-size:13px;">
+      <option value="m2" ${unidad==='m2'?'selected':''}>m²</option>
+      <option value="ml" ${unidad==='ml'?'selected':''}>ml</option>
+      <option value="pza" ${unidad==='pza'?'selected':''}>pza</option>
+      <option value="gl" ${unidad==='gl'?'selected':''}>global</option>
+    </select></td>
+    <td><input type="number" value="0" min="0" step="0.01" class="form-control" onchange="items[${idx}].qty=parseFloat(this.value)||0;calcRow(${idx},${id})" style="padding:6px; font-size:13px;"></td>
+    <td><input type="number" value="${precio}" min="0" step="0.01" class="form-control" onchange="items[${idx}].price=parseFloat(this.value)||0;calcRow(${idx},${id})" style="padding:6px; font-size:13px;"></td>
+    <td id="sub${id}" style="font-weight:700;color:var(--red); vertical-align:middle;">0.00</td>
+    <td style="vertical-align:middle;"><button type="button" onclick="delRow(${id},${idx})" style="background:transparent;border:none;color:#f87171;cursor:pointer;padding:4px"><i class="bi bi-trash"></i></button></td>`;
+  document.getElementById('tbody').appendChild(tr);
+}
+function calcRow(idx, id) {
+  const it = items[idx];
+  const s = (it.qty * it.price).toFixed(2);
+  document.getElementById(`sub${id}`).textContent = s;
+  calcTotal();
+}
+function calcTotal() {
+  const t  = items.reduce((s,it)=>s+(it.qty*it.price),0);
+  const tc = parseFloat(document.getElementById('tipo_cambio').value) || 6.97;
+  const bs = t * tc;
+  document.getElementById('total_display').textContent = '$us ' + t.toFixed(2);
+  document.getElementById('total_bs').textContent      = 'Bs '  + bs.toFixed(2);
+}
+function delRow(id, idx) {
+  document.getElementById(`r${id}`).remove();
+  items.splice(idx,1); calcTotal();
+}
+function useProduct(pid, desc, unidad, precio) {
+  addRow(pid, desc, unidad, precio);
+}
+function prepEnvio() {
+  document.getElementById('items_json').value = JSON.stringify(
+    items.map(it=>({pid:it.pid,desc:it.desc,unidad:it.unidad,qty:it.qty,price:it.price}))
+  );
+}
+document.getElementById('filtro').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.prod-item').forEach(el => {
+    el.style.display = el.dataset.name.includes(q) ? '' : 'none';
+  });
+});
+addRow();
+</script>
+{% endblock %}
+

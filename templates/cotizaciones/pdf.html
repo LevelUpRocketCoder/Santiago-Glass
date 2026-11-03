@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+/* ─ BASE ─ */
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10.5px;
+  color: #1a1a1a;
+  background: #fff;
+  padding: 28px 32px;
+}
+
+/* ─ HEADER ─ */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+}
+.logo-block img {
+  height: 80px;
+  display: block;
+}
+.company-info {
+  margin-top: 6px;
+  font-size: 9.5px;
+  line-height: 1.55;
+  color: #333;
+}
+.company-info strong {
+  font-size: 10px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* ─ CLIENTE META ─ */
+.meta-block {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  font-size: 10.5px;
+  line-height: 1.7;
+}
+.meta-left { }
+.meta-left span { display: block; }
+.meta-right { text-align: right; }
+.meta-right span { display: block; }
+
+/* ─ TITULO ─ */
+.titulo {
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: underline;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* ─ TABLA ─ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0;
+}
+table, th, td {
+  border: 1px solid #999;
+}
+thead th {
+  background: #fff;
+  font-weight: bold;
+  font-size: 10px;
+  text-align: center;
+  padding: 6px 5px;
+  vertical-align: middle;
+}
+/* Sub-header PRECIO */
+.th-precio {
+  text-align: center;
+  padding: 2px 0;
+  border: none;
+}
+/* Precio sub-columns */
+.sub-head {
+  border-top: 1px solid #999;
+}
+
+tbody td {
+  padding: 6px 7px;
+  font-size: 10px;
+  vertical-align: top;
+  line-height: 1.55;
+}
+.td-center { text-align: center; vertical-align: middle; }
+.td-right  { text-align: right;  vertical-align: middle; font-weight: bold; }
+.td-right-total {
+  text-align: right;
+  font-weight: bold;
+  background: #ffff00; /* amarillo como el PDF de ejemplo */
+  color: #1a1a1a;
+  vertical-align: middle;
+}
+
+/* Fila de total general */
+.total-row td {
+  font-weight: bold;
+  font-size: 10.5px;
+  padding: 6px 7px;
+}
+.total-row .total-val {
+  background: #00b050; /* verde como el PDF */
+  color: #fff;
+  text-align: right;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+/* ─ MONTO EN LETRAS ─ */
+.monto-letras {
+  margin-top: 10px;
+  margin-bottom: 14px;
+  font-size: 10.5px;
+  line-height: 1.6;
+}
+.monto-letras strong { font-weight: bold; }
+
+/* ─ NOTAS ─ */
+.notas {
+  font-size: 10px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  line-height: 1.7;
+}
+
+/* ─ FIRMAS ─ */
+.firmas {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 50px;
+  text-align: center;
+  font-size: 10px;
+}
+.firma-col {
+  width: 200px;
+}
+.firma-linea {
+  border-top: 1px solid #333;
+  padding-top: 6px;
+  margin-top: 4px;
+  font-weight: bold;
+  font-size: 10.5px;
+  line-height: 1.6;
+}
+
+/* ─ FOOTER ─ */
+.footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 8.5px;
+  color: #999;
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+}
+</style>
+</head>
+<body>
+
+<!-- ── ENCABEZADO ─────────────────────────────── -->
+<div class="header">
+  <div class="logo-block">
+    <img src="{{ logo_url }}" alt="Santiago Glass">
+    <div class="company-info">
+      <strong>SANTIAGO GLASS</strong>
+      Dirección: PAMPAHASI CALLE 4N0 126<br>
+      FACEBOOK: SANTIAGOGLASS<br>
+      Celular: 79142535 · 75289064 · 67064233
+    </div>
+  </div>
+</div>
+
+<!-- ── DATOS DEL CLIENTE ──────────────────────── -->
+<div class="meta-block">
+  <div class="meta-left">
+    <span><strong>CLIENTE:</strong> {{ c.cliente.nombre_completo|upper }}</span>
+    <span><strong>OBRA &nbsp;&nbsp;&nbsp;:</strong> {{ c.obra|default:"-"|upper }}</span>
+    <span><strong>DIRECCIÓN:</strong> {{ c.cliente.direccion|default:"-"|upper }}</span>
+  </div>
+  <div class="meta-right">
+    <span><strong>FECHA:</strong> {{ c.fecha|date:"d-m-Y" }}</span>
+    <span><strong>N.° {{ c.numero }}</strong></span>
+  </div>
+</div>
+
+<!-- ── TÍTULO ─────────────────────────────────── -->
+<div class="titulo">COTIZACION</div>
+
+<!-- ── TABLA ──────────────────────────────────── -->
+<table>
+  <thead>
+    <tr>
+      <th style="width:35px">ITEM</th>
+      <th style="width:70px">CANTIDAD</th>
+      <th style="width:38px">M2</th>
+      <th>DETALLE</th>
+      <th colspan="2" style="width:160px">PRECIO</th>
+    </tr>
+    <tr>
+      <th colspan="4" style="border:none; background:transparent"></th>
+      <th class="sub-head" style="width:80px">UNITARIO</th>
+      <th class="sub-head" style="width:80px">TOTAL</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for it in items %}
+    <tr>
+      <td class="td-center">{{ forloop.counter }}</td>
+      <td class="td-center">
+        {% if it.unidad == 'm2' or it.unidad == 'M2' %}
+          {{ it.cantidad|floatformat:0 }} M2
+        {% else %}
+          {{ it.cantidad|floatformat:2 }} {{ it.unidad|upper }}
+        {% endif %}
+      </td>
+      <td class="td-center">
+        {% if it.unidad == 'm2' or it.unidad == 'M2' %}m2{% endif %}
+      </td>
+      <td>{{ it.descripcion }}</td>
+      <td class="td-right">{{ it.precio_unitario|floatformat:0 }} Sus</td>
+      <td class="td-right-total">{{ it.total_item|floatformat:3 }} Sus</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+
+  <!-- TOTAL GENERAL -->
+  <tr class="total-row">
+    <td colspan="4" style="text-align:left; border-right:none; vertical-align:top;">
+      SON: {{ total_letras|upper }} 00/100<br>
+      Dólares Americanos<br>
+      <span style="font-size:9px;color:#555;font-weight:normal;">
+        Tipo de cambio: $us 1 = Bs {{ c.tipo_cambio }} &nbsp;|&nbsp;
+        Equivalente: Bs {{ total_bs|floatformat:2 }}
+      </span>
+    </td>
+    <td class="total-val" style="width:80px">{{ c.total|floatformat:3 }} Sus</td>
+  </tr>
+</table>
+
+<!-- ── NOTAS LEGALES ──────────────────────────── -->
+<div class="notas" style="margin-top:14px;">
+  GARANTIA Y MANTENIMIENTO DE UN AÑO<br>
+  ESTA COTIZACION INCLUYE IMPUESTOS DE LEY
+</div>
+
+{% if c.observaciones %}
+<p style="font-size:10px; color:#555; margin-bottom:12px;"><strong>Notas:</strong> {{ c.observaciones }}</p>
+{% endif %}
+
+<!-- ── FIRMAS ──────────────────────────────────── -->
+<div class="firmas">
+  <div class="firma-col">
+    <div style="margin-bottom:40px"></div>
+    <div class="firma-linea">
+      CHRISTIAN SILVA<br>
+      TEC. ALUMINIOS<br>
+      4780648 LP
+    </div>
+  </div>
+  <div class="firma-col">
+    <div style="margin-bottom:40px"></div>
+    <div class="firma-linea">
+      ARQ. ERICK SILVA<br>
+      SUPERVISOR<br>
+      12763515 LP
+    </div>
+  </div>
+</div>
+
+<div class="footer">Santiago Glass — La Paz, Bolivia · Sistema de Gestión 2026</div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+    @page { margin: 0.8cm; size: letter; }
+    body { font-family: 'Arial', 'Helvetica', sans-serif; font-size: 10px; color: #000; margin: 0; padding: 0; }
+    .header-row { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    .logo-cell { vertical-align: middle; padding: 0; }
+    .logo-cell img { height: 50px; width: auto; }
+    .brand-cell { vertical-align: middle; padding-left: 5px; }
+    .brand-name { font-size: 18px; font-weight: bold; color: #222; letter-spacing: 2px; margin: 0; }
+    .fb-icon { display: inline-block; width: 16px; height: 16px; background-color: #1877F2; color: white; border-radius: 3px; text-align: center; font-size: 11px; font-weight: bold; line-height: 16px; vertical-align: middle; margin-left: 4px; }
+    .contact-bar { background-color: #ff0000; color: white; font-weight: bold; font-size: 9px; padding: 4px 8px; text-align: center; vertical-align: middle; }
+    .client-row { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
+    .client-row td { font-size: 10px; padding: 2px 0; }
+    .client-label { font-weight: bold; }
+    .items-table { width: 100%; border-collapse: collapse; border: 1.5px solid #000; }
+    .items-table th { background-color: #ff0000; color: white; border: 1.5px solid #000; padding: 5px 4px; text-align: center; font-size: 9px; font-weight: bold; text-transform: uppercase; }
+    .items-table td { border: 1px solid #000; padding: 5px 4px; vertical-align: top; font-size: 9px; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .category-row td { font-weight: bold; font-size: 10px; padding: 5px; border-bottom: 1px solid #000; }
+    .item-desc { font-size: 9px; line-height: 1.3; text-transform: uppercase; }
+    .item-detail { font-size: 8px; color: #555; margin-top: 3px; }
+    .total-row td { font-weight: bold; padding: 6px 4px; font-size: 10px; border-top: 1.5px solid #000; }
+    .total-letras { text-decoration: underline; }
+    .nota-box { border: 1px solid #000; border-top: none; padding: 6px 8px; font-weight: bold; font-size: 10px; width: 100%; }
+    .firma-box { border: 1px solid #000; border-top: none; padding: 20px 8px 6px; font-size: 9px; font-weight: bold; width: 100%; }
+</style>
+</head>
+<body>
+<table class="header-row">
+    <tr>
+        <td class="logo-cell" style="width: 50px;"><img src="file:///{{ logo_path }}" alt="SG"></td>
+        <td class="brand-cell" style="width: 40%;"><span class="brand-name">SANTIAGO GLASS</span><span class="fb-icon">f</span></td>
+        <td class="contact-bar" style="width: 50%;">Celular: 79142535 &nbsp;&nbsp; 67064233 LA PAZ-BOLIVIA</td>
+    </tr>
+</table>
+<table class="client-row">
+    <tr>
+        <td style="width: 60%;"><span class="client-label">CLIENTE:</span> {{ cotizacion.cliente.nombre_completo|upper }}</td>
+        <td style="width: 40%; text-align: right;">{{ cotizacion.fecha|date:"d/m/Y" }}</td>
+    </tr>
+    <tr><td></td><td style="text-align: right; font-weight: bold;">{{ cotizacion.numero }}</td></tr>
+</table>
+<table class="items-table">
+    <thead>
+        <tr>
+            <th style="width: 4%;">It</th><th style="width: 48%;">COTIZACION</th>
+            <th style="width: 10%;">UNIDAD</th><th style="width: 10%;">CANTIDAD</th>
+            <th style="width: 13%;">PR UNITARIO</th><th style="width: 15%;">COSTO</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr class="category-row">
+            <td class="text-center">{{ forloop.counter }}</td>
+            <td colspan="5">{{ item.producto.nombre|upper|default:"—" }}</td>
+        </tr>
+        <tr>
+            <td class="text-center">{{ forloop.counter }}.1</td>
+            <td>
+                <div class="item-desc">{{ item.descripcion|upper }}</div>
+                {% if item.color or item.detalles %}
+                <div class="item-detail">
+                    {% if item.color %}COLOR: {{ item.color|upper }}{% endif %}
+                    {% if item.color and item.detalles %} | {% endif %}
+                    {% if item.detalles %}TIPO: {{ item.detalles|upper }}{% endif %}
+                </div>
+                {% endif %}
+            </td>
+            <td class="text-center">m²</td>
+            <td class="text-center">{{ item.cantidad }}</td>
+            <td class="text-right">{{ item.precio_unitario|floatformat:0 }}</td>
+            <td class="text-right">{{ item.total_item|floatformat:0 }} &nbsp;&nbsp; Bs</td>
+        </tr>
+        {% endfor %}
+        {% for i in empty_rows %}
+        <tr><td style="height: 25px;">&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+        {% endfor %}
+        <tr class="total-row">
+            <td colspan="3" class="text-center total-letras" style="border-right: none;">{{ cotizacion.total_letras }}</td>
+            <td class="text-center" style="border-left: none; border-right: none;">BOLIVIANOS</td>
+            <td class="text-right" style="border-left: none;"></td>
+            <td class="text-right">{{ cotizacion.total|floatformat:0 }} &nbsp;&nbsp; Bs</td>
+        </tr>
+    </tbody>
+</table>
+<table style="width: 100%; border-collapse: collapse;"><tr><td class="nota-box">ESTA COTIZACION NO &nbsp; INCLUYE FACTURA</td></tr></table>
+<table style="width: 100%; border-collapse: collapse;"><tr><td class="firma-box">ARQ.ERICK CHRISTIAN SILVA F. N-19454 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TEC.CHRISTIAN SILVA L</td></tr></table>
+</body>
+</html>

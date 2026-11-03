@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Santiago Glass{% endblock %}</title>
+    <!-- Fuentes Premium -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Iconos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js para el Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Estilos Principales -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+
+<!-- Navegación Superior -->
+<nav class="top-nav">
+    <div class="nav-container">
+        <!-- Logo y Marca -->
+        <a href="{% url 'dashboard' %}" class="brand-link">
+            <img src="{% static 'img/logo.jpg' %}" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+            <div class="brand-text">
+                <span class="brand-name">Santiago Glass</span>
+                <span class="brand-sub">SISTEMA DE GESTIÓN</span>
+            </div>
+        </a>
+
+        <!-- Enlaces Centrados -->
+                <div class="nav-links">
+            <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="bi bi-grid-1x2"></i> Dashboard
+            </a>
+            <a href="{% url 'lista_clientes' %}" class="nav-link {% if 'cliente' in request.path %}active{% endif %}">
+                <i class="bi bi-people"></i> Clientes
+            </a>
+            <a href="{% url 'lista_cotizaciones' %}" class="nav-link {% if 'cotizacion' in request.path %}active{% endif %}">
+                <i class="bi bi-file-earmark-text"></i> Cotizaciones
+            </a>
+            <a href="{% url 'tablero' %}" class="nav-link {% if 'proyecto' in request.path %}active{% endif %}">
+                <i class="bi bi-kanban"></i> Proyectos
+            </a>
+            <a href="{% url 'lista_productos' %}" class="nav-link {% if 'producto' in request.path %}active{% endif %}">
+                <i class="bi bi-grid-3x3-gap"></i> Catálogo
+            </a>
+            <a href="{% url 'reporte' %}" class="nav-link {% if 'reporte' in request.path %}active{% endif %}">
+                <i class="bi bi-bar-chart"></i> Reportes
+            </a>
+            <a href="{% url 'diseno_wizard' %}" class="nav-link {% if 'diseno' in request.path %}active{% endif %}" style="color:var(--gold); border: 1px solid var(--gold-glow); background: rgba(251,191,36,0.1);">
+                <i class="bi bi-vector-pen"></i> Diseño
+            </a>
+        </div>
+
+        <!-- Usuario -->
+        <div class="user-pill">
+            <div class="user-avatar">{{ request.user.username.0|upper }}</div>
+            <span class="user-name">{{ request.user.username }}</span>
+            <a href="#" class="logout-btn"><i class="bi bi-box-arrow-right"></i></a>
+        </div>
+    </div>
+</nav>
+
+<!-- Page Hero Bar (Opcional, para contexto) -->
+<div class="page-hero">
+    <div class="hero-container">
+        <h1 class="hero-title">{% block page_title %}Dashboard{% endblock %}</h1>
+    </div>
+</div>
+
+<!-- Contenedor Principal -->
+<main class="main-container">
+    <!-- Mensajes del Sistema -->
+    {% if messages %}
+    <div class="messages-container mb-24">
+        {% for m in messages %}
+        <div class="alert alert-{{ m.tags }}">
+            {{ m }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Contenido Dinámico -->
+    {% block content %}
+    {% endblock %}
+</main>
+
+{% block extra_js %}
+{% endblock %}
+</body>
+</html>
+
+
+
+

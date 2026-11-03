@@ -1,0 +1,1248 @@
+{% extends 'base.html' %}
+{% block title %}Diseño de Aberturas 3D con IA | Santiago Glass{% endblock %}
+{% block page_title %}{% endblock %}
+
+{% block content %}
+<style>
+.top-nav { box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 100; position: relative; }
+body { overflow: hidden; margin: 0; }
+
+/* CONTENEDOR 3D */
+.canvas-wrapper {
+    position: fixed; top: 70px; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+    z-index: 1; overflow: hidden;
+}
+#dibujo-contenedor { width: 100%; height: 100%; }
+
+/* ETIQUETAS 3D HTML */
+.cota-label {
+    position: absolute; color: #fbbf24; font-size: 1.1rem; font-weight: bold; font-family: sans-serif;
+    pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    transform: translate(-50%, -50%); z-index: 2;
+    background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(251,191,36,0.3);
+}
+
+/* PANEL FLOTANTE SUPERIOR IZQUIERDA */
+.panel-flotante {
+    position: fixed; top: 90px; left: 20px; width: 440px;
+    background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85); z-index: 10; display: flex; flex-direction: column;
+    max-height: calc(100vh - 110px); overflow-y: auto; scrollbar-width: thin;
+}
+.panel-flotante::-webkit-scrollbar { width: 6px; }
+.panel-flotante::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+.panel-header { padding: 1.2rem 1.5rem 0.8rem 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.panel-header h2 { margin: 0; font-size: 1.4rem; color: #38bdf8; font-weight: 800; display:flex; align-items:center; gap:8px;}
+.panel-body { padding: 1.2rem 1.5rem 1.5rem 1.5rem; }
+
+/* BOTONES RAPIDOS */
+.btn-rapidos { display: flex; gap: 6px; margin-bottom: 12px; }
+.btn-rapido { flex: 1; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.25); color: #38bdf8; padding: 7px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 0.82rem; font-weight:600;}
+.btn-rapido:hover { background: rgba(56,189,248,0.25); }
+
+/* PROMPT IA */
+.ia-prompt-box {
+    background: rgba(0,0,0,0.55); border: 2px solid #38bdf8; border-radius: 12px;
+    padding: 12px; margin-bottom: 14px; box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+}
+.ia-prompt-box textarea {
+    width: 100%; background: transparent; border: none; color: white;
+    font-size: 1rem; resize: none; outline: none; font-family: inherit;
+}
+.btn-ia {
+    background: linear-gradient(45deg, #38bdf8, #818cf8); color: white; border: none; padding: 10px; width: 100%;
+    border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
+    margin-top: 8px; transition: transform 0.2s;
+}
+.btn-ia:hover { transform: translateY(-2px); }
+
+/* CONFIRMACION IA */
+.ia-confirmacion {
+    display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 12px;
+    padding: 12px; margin-bottom: 14px;
+}
+.ia-confirmacion p { color: #34d399; font-size: 0.9rem; margin-bottom: 8px; font-weight:bold; line-height:1.4;}
+.ia-confirmacion .btn-ok { background: #10b981; color: black; border: none; padding: 6px 14px; border-radius: 7px; font-weight: bold; cursor: pointer; }
+.ia-confirmacion .btn-fix { background: transparent; border: 1px solid #10b981; color: #10b981; padding: 6px 14px; border-radius: 7px; font-weight: bold; cursor: pointer; margin-left: 5px;}
+
+/* PESTAÑAS DEL PANEL */
+.panel-tabs {
+    display: flex; gap: 6px; margin: 10px 0 14px 0; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;
+}
+.panel-tab {
+    flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-dim); padding: 8px 6px; border-radius: 8px; cursor: pointer;
+    font-size: 0.8rem; font-weight: 700; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.panel-tab:hover { background: rgba(56,189,248,0.1); color: #38bdf8; }
+.panel-tab.active { background: rgba(56,189,248,0.2); border-color: #38bdf8; color: white; }
+
+.dot-status { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot-verde { background: #10b981; box-shadow: 0 0 6px #10b981; }
+.dot-amarillo { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+.dot-rojo { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+
+.badge-mini {
+    background: rgba(251,191,36,0.2); color: var(--gold); font-size: 0.72rem; padding: 1px 6px; border-radius: 4px; font-weight: 800;
+}
+
+/* CONTROLES TRADICIONALES */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.input-grupo { margin-bottom: 12px; }
+.input-grupo label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-dim); margin-bottom: 4px; }
+.input-moderno {
+    width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 9px 12px; font-size: 1rem; color: white;
+}
+
+/* TARJETAS TÉCNICAS */
+.card-tecnica {
+    background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px; padding: 14px; margin-top: 4px;
+}
+.card-tecnica-head {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+}
+.card-tecnica-title {
+    display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 0.92rem;
+}
+.badge-tag {
+    font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.tag-verde { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.tag-amarillo { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.tag-rojo { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+.tag-gold { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+
+.metrics-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px;
+    background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.04);
+}
+.metric-mini { text-align: center; }
+.m-lbl { display: block; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+.m-val { font-family: var(--font-head); font-weight: 800; font-size: 1.05rem; color: #f8fafc; }
+
+.herrajes-lista {
+    display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto; padding-right: 2px;
+}
+.herraje-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    padding: 8px 12px; border-radius: 10px; transition: 0.2s;
+}
+.herraje-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
+.herraje-info { display: flex; align-items: center; gap: 10px; }
+.herraje-icon { color: var(--gold); font-size: 1.1rem; }
+.herraje-name { font-weight: 700; font-size: 0.85rem; color: #e2e8f0; }
+.herraje-sub { font-size: 0.72rem; color: var(--text-dim); display: block; }
+.herraje-cant {
+    background: rgba(251,191,36,0.15); color: var(--gold); border: 1px solid rgba(251,191,36,0.3);
+    font-weight: 800; font-size: 0.82rem; padding: 3px 8px; border-radius: 6px; white-space: nowrap;
+}
+
+.cortes-lista {
+    display: flex; flex-direction: column; gap: 6px; margin-top: 6px; max-height: 220px; overflow-y: auto; padding-right: 2px;
+}
+.corte-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    padding: 7px 10px; border-radius: 8px; transition: 0.2s;
+}
+.corte-item:hover { background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.25); }
+.corte-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.corte-code { background: rgba(56,189,248,0.15); color: #38bdf8; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+.corte-desc { font-weight: 700; font-size: 0.8rem; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.corte-formula { font-size: 0.68rem; color: var(--text-dim); display: block; }
+.corte-badge-cant { background: rgba(255,255,255,0.08); color: #cbd5e1; font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-right: 4px; }
+.corte-dim { font-family: var(--font-head); font-weight: 800; font-size: 0.88rem; color: #38bdf8; white-space: nowrap; }
+.corte-ang { font-size: 0.68rem; color: #94a3b8; margin-left: 4px; }
+
+.banner-resumen-tecnico {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+    padding: 8px 12px; border-radius: 10px; margin-top: 12px; cursor: pointer; transition: 0.2s;
+}
+.banner-resumen-tecnico:hover { border-color: var(--gold); }
+
+/* TARJETA PRECIO SUPERIOR DERECHA */
+.tarjeta-precio {
+    position: fixed; top: 90px; right: 20px;
+    background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85); z-index: 10; padding: 1.4rem; 
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    min-width: 300px; white-space: nowrap;
+}
+.precio-bloque { text-align: center; width: 100%; }
+.precio-lbl { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 4px; }
+.precio-val { font-size: 2rem; font-family: var(--font-head); font-weight: 800; margin: 0; }
+.divisor { width: 100%; height: 1px; background: rgba(255,255,255,0.1); }
+.btn-guardar { width: 100%; background: var(--gold); color: black; border: none; padding: 14px 0; font-size: 1.05rem; font-weight: 800; border-radius: 12px; cursor: pointer; transition: 0.2s; }
+.btn-guardar:hover { transform: scale(1.03); }
+
+#ia-loading {
+    position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(15, 23, 42, 0.92); z-index: 100;
+    display: none; justify-content: center; align-items: center; flex-direction: column; color: #38bdf8; font-size: 1.3rem; font-weight: bold; border-radius: 20px;
+}
+</style>
+
+<div class="canvas-wrapper">
+    <div id="dibujo-contenedor"></div>
+    <div id="cota-ancho" class="cota-label" style="display:none;">↔ <span id="val-ancho">120</span> cm</div>
+    <div id="cota-alto" class="cota-label" style="display:none;">↕ <span id="val-alto">190</span> cm</div>
+</div>
+
+<div class="panel-flotante fade-in">
+    <div id="ia-loading">
+        <i class="bi bi-robot" style="font-size:3rem; margin-bottom:10px; animation: bounce 1s infinite;"></i>
+        <span>Generando Entorno 3D...</span>
+    </div>
+    
+    <div class="panel-header"><h2><i class="bi bi-robot"></i> Creador IA 3D</h2></div>
+    <div class="panel-body">
+        
+        <div class="btn-rapidos" style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn-rapido" onclick="setPrompt('Box de baño corredizo de 120 de ancho por 190 de alto, con una hoja fija y una móvil, vidrio templado transparente de 8 mm, sin marco.')">🚿 Box Baño</button>
+            <button class="btn-rapido" onclick="setPrompt('Ventana corrediza serie 30 de 150x120 con gancho color antracita')">🪟 S-30 Antracita Gancho</button>
+            <button class="btn-rapido" onclick="setPrompt('Puerta corrediza serie 40 de 200x210 color madera con cerradura')">🚪 S-40 Puerta Madera</button>
+            <button class="btn-rapido" onclick="setPrompt('Ventana con tubo 2x1 color oro de 120x150 vidrio reflectivo')">✨ Tubo 2x1 Oro</button>
+        </div>
+
+        <div class="ia-prompt-box" id="box-prompt">
+            <textarea id="ia-prompt" rows="3" placeholder="Ej: Box de baño esquinero 90x90...">Box de baño corredizo de 120 de ancho por 190 de alto, con una hoja fija y una móvil, vidrio templado transparente de 8 mm, sin marco.</textarea>
+            <button class="btn-ia" onclick="generarConIA()"><i class="bi bi-magic"></i> Visualizar 3D</button>
+        </div>
+
+        <div class="ia-confirmacion" id="box-confirmacion">
+            <p id="texto-interpretado">Entendí: ...</p>
+            <div>
+                <button class="btn-ok" onclick="aceptarModelo()"><i class="bi bi-check-lg"></i> Está bien</button>
+                <button class="btn-fix" onclick="corregirModelo()"><i class="bi bi-pencil"></i> Corregir</button>
+                <button class="btn-fix" onclick="resetCamara()" style="color:#38bdf8; border-color:#38bdf8;"><i class="bi bi-camera-video"></i> Centrar</button>
+                <button class="btn-fix" onclick="enfocarHerrajes()" style="color:var(--gold); border-color:var(--gold);"><i class="bi bi-tools"></i> Ver Seguro/Tornillos</button>
+            </div>
+        </div>
+
+        <!-- PESTAÑAS -->
+        <div class="panel-tabs">
+            <button class="panel-tab active" id="tab-btn-medidas" onclick="switchTab('medidas')"><i class="bi bi-sliders"></i> Medidas</button>
+            <button class="panel-tab" id="tab-btn-seguridad" onclick="switchTab('seguridad')"><i class="bi bi-shield-check"></i> Seguridad <span id="badge-seguridad-dot" class="dot-status dot-verde"></span></button>
+            <button class="panel-tab" id="tab-btn-herrajes" onclick="switchTab('herrajes')"><i class="bi bi-tools"></i> Herrajes <span id="badge-tornillos-cnt" class="badge-mini">0</span></button>
+            <button class="panel-tab" id="tab-btn-perfiles" onclick="switchTab('perfiles')"><i class="bi bi-bounding-box"></i> Perfiles & Corte <span id="badge-barras-cnt" class="badge-mini" style="color:#38bdf8; background:rgba(56,189,248,0.2);">0 b</span></button>
+        </div>
+
+        <!-- TAB 1: MEDIDAS Y PRECIO -->
+        <div id="tab-medidas" class="tab-content active">
+            <div style="display:flex; gap:10px;">
+                <div class="input-grupo" style="flex:1;">
+                    <label>ANCHO (cm)</label><input type="number" id="ancho" class="input-moderno" value="120" min="1" oninput="onMedidasChange()">
+                </div>
+                <div class="input-grupo" style="flex:1;">
+                    <label>ALTO (cm)</label><input type="number" id="alto" class="input-moderno" value="190" min="1" oninput="onMedidasChange()">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <div class="input-grupo" style="flex:1;">
+                    <label style="color:var(--gold);">PRECIO M² ($us)</label><input type="number" id="precio_m2" class="input-moderno" style="color:var(--gold); border-color:var(--gold);" value="65" min="0" oninput="calcularTotal()">
+                </div>
+                <div class="input-grupo" style="flex:1;">
+                    <label style="color:var(--green);">T. CAMBIO (Bs)</label><input type="number" id="tipo_cambio" class="input-moderno" value="6.97" step="0.01" oninput="calcularTotal()">
+                </div>
+            </div>
+
+            <!-- PRECIO AL CAMBIO OFICIAL MOVIDO A LA IZQUIERDA -->
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.08);">
+                <div>
+                    <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); font-weight: 700; display:block;">CAMBIO OFICIAL</span>
+                    <span style="font-size: 0.75rem; color: #94a3b8;">1 $us = <span id="tc-valor-lbl">6.97</span> Bs</span>
+                </div>
+                <div class="precio-val" style="color:var(--green); font-size: 1.5rem; margin:0;" id="precio-vivo">Bs 0.00</div>
+            </div>
+
+            <!-- Resumen Técnico Clickable -->
+            <div class="banner-resumen-tecnico" onclick="switchTab('seguridad')">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span id="mini-dot" class="dot-status dot-verde"></span>
+                    <span id="mini-est-texto" style="font-size:0.82rem; font-weight:700;">Seguridad Estructural Óptima</span>
+                </div>
+                <span id="mini-tornillos-texto" style="font-size:0.78rem; color:var(--gold); font-weight:800;">46 Tornillos</span>
+            </div>
+        </div>
+
+        <!-- TAB 2: DIAGNÓSTICO ESTRUCTURAL, TÉRMICO Y ACÚSTICO (DLUBAL & ONVENTANAS) -->
+        <div id="tab-seguridad" class="tab-content">
+            <!-- 1. Seguridad Estructural ASTM E1300 / Dlubal -->
+            <div class="card-tecnica" id="card-estructural-box" style="border-left: 4px solid #10b981;">
+                <div class="card-tecnica-head">
+                    <div class="card-tecnica-title">
+                        <span id="est-icono-dot" class="dot-status dot-verde"></span>
+                        <span id="est-titulo-txt">Seguridad Estructural Óptima</span>
+                    </div>
+                    <span id="est-badge-norma" class="badge-tag tag-verde">ASTM E1300</span>
+                </div>
+                <p id="est-desc-txt" style="font-size:0.83rem; color:#cbd5e1; margin:6px 0 10px 0; line-height:1.4;">
+                    Vidrio verificado para flexión y presión de viento.
+                </p>
+                <div class="metrics-grid">
+                    <div class="metric-mini">
+                        <span class="m-lbl">Espesor Rec.</span>
+                        <span id="est-esp-rec" class="m-val">8 mm</span>
+                    </div>
+                    <div class="metric-mini">
+                        <span class="m-lbl">Flecha Est.</span>
+                        <span id="est-flecha" class="m-val">1.4 mm</span>
+                    </div>
+                    <div class="metric-mini">
+                        <span class="m-lbl">Viento Máx.</span>
+                        <span id="est-viento" class="m-val">135 km/h</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Rendimiento Térmico, Acústico y Peso (Criterio OnVentanas / EN 673) -->
+            <div class="card-tecnica" style="border-left: 4px solid #38bdf8; margin-top:10px;">
+                <div class="card-tecnica-head">
+                    <div class="card-tecnica-title" style="color:#38bdf8;">
+                        <i class="bi bi-thermometer-snow"></i>
+                        <span id="vid-tipo-nombre">Vidrio Monolítico 6 mm</span>
+                    </div>
+                    <span id="vid-clase-badge" class="badge-tag" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);">Clase F</span>
+                </div>
+
+                <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr); margin-top:8px;">
+                    <div class="metric-mini">
+                        <span class="m-lbl">Transmit. Ug</span>
+                        <span id="vid-ug-val" class="m-val" style="color:#38bdf8;">5.7</span>
+                        <span style="font-size:0.6rem; color:#94a3b8;">W/m²K</span>
+                    </div>
+                    <div class="metric-mini">
+                        <span class="m-lbl">Aisl. Acústico</span>
+                        <span id="vid-rw-val" class="m-val" style="color:#10b981;">32</span>
+                        <span style="font-size:0.6rem; color:#94a3b8;">dB (Rw)</span>
+                    </div>
+                    <div class="metric-mini">
+                        <span class="m-lbl">Factor Solar g</span>
+                        <span id="vid-g-val" class="m-val" style="color:#f59e0b;">82%</span>
+                        <span style="font-size:0.6rem; color:#94a3b8;">calor solar</span>
+                    </div>
+                    <div class="metric-mini">
+                        <span class="m-lbl">Peso Vidrio</span>
+                        <span id="vid-peso-val" class="m-val" style="color:var(--gold);">27 kg</span>
+                        <span style="font-size:0.6rem; color:#94a3b8;">OnVentanas</span>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px; background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 10px; font-size:0.75rem; color:#cbd5e1; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="color:var(--text-dim); display:block; font-size:0.68rem;">SEGURIDAD HUMANA:</span>
+                        <strong id="vid-seg-humana" style="color:#f8fafc;">Rotura en granos pequeños no lesivos</strong>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="color:var(--text-dim); display:block; font-size:0.68rem;">AHORRO TÉRMICO:</span>
+                        <strong id="vid-ahorro-pct" style="color:#10b981;">+75% vs simple</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: DESPIECE DE TORNILLOS Y HERRAJES -->
+        <div id="tab-herrajes" class="tab-content">
+            <div class="card-tecnica" style="border-left: 4px solid var(--gold);">
+                <div class="card-tecnica-head">
+                    <div class="card-tecnica-title" style="color:var(--gold);">
+                        <i class="bi bi-tools"></i>
+                        <span>Fijaciones y Accesorios</span>
+                    </div>
+                    <span id="her-total-tornillos" class="badge-tag tag-gold">46 tornillos</span>
+                </div>
+                <div id="her-lista-items" class="herrajes-lista">
+                    <!-- Elementos generados dinámicamente -->
+                </div>
+                <button class="btn-rapido" onclick="enfocarHerrajes()" style="width:100%; margin-top:10px; color:var(--gold); border-color:var(--gold);">
+                    <i class="bi bi-search"></i> Enfocar Seguro y Tornillos en 3D
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 4: PERFILES DE ALUMINIO Y OPTIMIZACIÓN DE CORTE (LUMINIO) -->
+        <div id="tab-perfiles" class="tab-content">
+            <div class="card-tecnica" style="border-left: 4px solid #38bdf8;">
+                <div class="card-tecnica-head">
+                    <div class="card-tecnica-title" style="color:#38bdf8;">
+                        <i class="bi bi-bounding-box"></i>
+                        <span id="prf-serie-titulo">Serie 30 (Estándar)</span>
+                    </div>
+                    <span id="prf-color-badge" class="badge-tag" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);">Antracita</span>
+                </div>
+                
+                <!-- Grilla de optimización de barras -->
+                <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr); margin-top:8px;">
+                    <div class="metric-mini">
+                        <span class="m-lbl">Barras 6m</span>
+                        <span id="prf-barras-6m" class="m-val" style="color:#38bdf8;">3</span>
+                    </div>
+                    <div class="metric-mini">
+                        <span class="m-lbl">M. Útiles</span>
+                        <span id="prf-metros-util" class="m-val">11.8 m</span>
+                    </div>
+                    <div class="metric-mini">
+                        <span class="m-lbl">Merma</span>
+                        <span id="prf-merma-pct" class="m-val" style="color:#f59e0b;">28%</span>
+                    </div>
+                    <div class="metric-mini">
+                        <span class="m-lbl">Peso Est.</span>
+                        <span id="prf-peso-kg" class="m-val">11.2 kg</span>
+                    </div>
+                </div>
+
+                <!-- Barra visual de rendimiento de corte -->
+                <div style="margin-top:10px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-dim); margin-bottom:3px;">
+                        <span>Aprovechamiento: <strong id="prf-aprov-txt" style="color:#34d399;">72%</strong></span>
+                        <span>Retazo: <strong id="prf-retazo-txt" style="color:#f59e0b;">5.2 m</strong></span>
+                    </div>
+                    <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; display:flex;">
+                        <div id="prf-bar-util" style="width:72%; height:100%; background:#10b981;"></div>
+                        <div id="prf-bar-merma" style="width:28%; height:100%; background:#f59e0b;"></div>
+                    </div>
+                </div>
+
+                <!-- Tabla de lista de cortes para taller -->
+                <div style="margin-top:12px;">
+                    <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); font-weight:700; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>📋 Lista de Cortes (Taller)</span>
+                        <span id="prf-total-piezas" style="color:#38bdf8; font-weight:800;">12 piezas</span>
+                    </div>
+                    <div id="prf-lista-cortes" class="cortes-lista">
+                        <!-- Filas de corte generadas dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="tarjeta-precio fade-in">
+    <div class="precio-bloque"><div class="precio-lbl">TOTAL ESTIMADO</div><div class="precio-val" style="color:var(--gold);" id="total-us">$us 0.00</div></div>
+    <div class="divisor"></div>
+    <button class="btn-guardar" onclick="alert('Modelo 3D y especificaciones técnicas guardadas!')"><i class="bi bi-save"></i> Guardar a Cotización</button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- THREE.JS CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+
+<script>
+let scene, camera, renderer, controls;
+let objectGroup, cotaGroup;
+let isRotating = false;
+let animId;
+let ultimoDatos = null;
+
+function init3D() {
+    const container = document.getElementById('dibujo-contenedor');
+    scene = new THREE.Scene();
+    
+    // Cámara en perspectiva 3/4
+    camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 0.1, 100);
+    
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.innerHTML = '';
+    container.appendChild(renderer.domElement);
+
+    // Entorno físico PMREM
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment()).texture;
+
+    // Iluminación
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfffaed, 1.8);
+    dirLight.position.set(5, 8, 4);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 25;
+    dirLight.shadow.bias = -0.0005;
+    scene.add(dirLight);
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.02; // No bajar del piso
+    controls.minDistance = 1.2;
+    controls.maxDistance = 12;
+    controls.addEventListener('start', () => { isRotating = false; });
+
+    objectGroup = new THREE.Group();
+    scene.add(objectGroup);
+    
+    cotaGroup = new THREE.Group();
+    scene.add(cotaGroup);
+
+    window.addEventListener('resize', onWindowResize, false);
+    buildEnvironment();
+    animate();
+}
+
+function buildEnvironment() {
+    // Piso de cerámica
+    const canvas = document.createElement('canvas');
+    canvas.width = 512; canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0,0,512,512);
+    ctx.fillStyle = '#e2e8f0';
+    for(let i=0; i<8; i++){
+        for(let j=0; j<8; j++){
+            if((i+j)%2 === 0) ctx.fillRect(i*64, j*64, 64, 64);
+        }
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(8,8);
+    
+    const floorMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.15, metalness: 0.1 });
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+    
+    // Paredes L
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.8 });
+    const wH = 2.4;
+    
+    const wallBack = new THREE.Mesh(new THREE.PlaneGeometry(15, wH), wallMat);
+    wallBack.position.set(0, wH/2, -1.5);
+    wallBack.receiveShadow = true;
+    scene.add(wallBack);
+    
+    const wallSide = new THREE.Mesh(new THREE.PlaneGeometry(15, wH), wallMat);
+    wallSide.rotation.y = Math.PI / 2;
+    wallSide.position.set(-1.5, wH/2, 0);
+    wallSide.receiveShadow = true;
+    scene.add(wallSide);
+}
+
+function drawDimensionLine(start, end, axis) {
+    const material = new THREE.LineBasicMaterial({ color: 0xfbbf24, linewidth: 2, depthTest: false });
+    const points = [start, end];
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const line = new THREE.Line(geometry, material);
+    line.renderOrder = 999;
+    
+    const tickMat = new THREE.LineBasicMaterial({ color: 0xfbbf24, linewidth: 2, depthTest: false });
+    const tSize = 0.05;
+    
+    let t1p1, t1p2, t2p1, t2p2;
+    if(axis === 'x') {
+        t1p1 = new THREE.Vector3(start.x, start.y-tSize, start.z); t1p2 = new THREE.Vector3(start.x, start.y+tSize, start.z);
+        t2p1 = new THREE.Vector3(end.x, end.y-tSize, end.z); t2p2 = new THREE.Vector3(end.x, end.y+tSize, end.z);
+    } else {
+        t1p1 = new THREE.Vector3(start.x-tSize, start.y, start.z); t1p2 = new THREE.Vector3(start.x+tSize, start.y, start.z);
+        t2p1 = new THREE.Vector3(end.x-tSize, end.y, end.z); t2p2 = new THREE.Vector3(end.x+tSize, end.y, end.z);
+    }
+    
+    const tg1 = new THREE.BufferGeometry().setFromPoints([t1p1, t1p2]);
+    const tl1 = new THREE.Line(tg1, tickMat); tl1.renderOrder = 999;
+    
+    const tg2 = new THREE.BufferGeometry().setFromPoints([t2p1, t2p2]);
+    const tl2 = new THREE.Line(tg2, tickMat); tl2.renderOrder = 999;
+    
+    cotaGroup.add(line, tl1, tl2);
+}
+
+function createHollowFrame(w, h, thick, depth, material) {
+    const group = new THREE.Group();
+    const top = new THREE.Mesh(new THREE.BoxGeometry(w, thick, depth), material);
+    top.position.set(0, h/2 - thick/2, 0);
+    const bottom = new THREE.Mesh(new THREE.BoxGeometry(w, thick, depth), material);
+    bottom.position.set(0, -h/2 + thick/2, 0);
+    const left = new THREE.Mesh(new THREE.BoxGeometry(thick, h - thick*2, depth), material);
+    left.position.set(-w/2 + thick/2, 0, 0);
+    const right = new THREE.Mesh(new THREE.BoxGeometry(thick, h - thick*2, depth), material);
+    right.position.set(w/2 - thick/2, 0, 0);
+    
+    [top, bottom, left, right].forEach(m => { m.castShadow = true; m.receiveShadow = true; });
+    group.add(top, bottom, left, right);
+    return group;
+}
+
+// CREADOR DE TORNILLO METÁLICO 3D (CABEZA PHILLIPS)
+function createScrewMesh(isBack = false) {
+    const group = new THREE.Group();
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.95, roughness: 0.2 });
+    const headGeom = new THREE.CylinderGeometry(0.006, 0.006, 0.003, 16);
+    const head = new THREE.Mesh(headGeom, headMat);
+    head.rotation.x = isBack ? -Math.PI / 2 : Math.PI / 2;
+
+    const slotMat = new THREE.MeshBasicMaterial({ color: 0x18181b });
+    const s1 = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.0016, 0.0035), slotMat);
+    const s2 = new THREE.Mesh(new THREE.BoxGeometry(0.0016, 0.008, 0.0035), slotMat);
+    group.add(head, s1, s2);
+    return group;
+}
+
+function build3DModel(datos) {
+    while(objectGroup.children.length > 0) objectGroup.remove(objectGroup.children[0]);
+    while(cotaGroup.children.length > 0) cotaGroup.remove(cotaGroup.children[0]);
+    
+    objectGroup.rotation.y = -Math.PI/4;
+    isRotating = true;
+
+    const w = datos.ancho_cm / 100;
+    const h = datos.alto_cm / 100;
+    const isBox = datos.tipo_estructura === 'box_bano';
+    const isSinMarco = datos.marco === 'ninguno' || isBox;
+    
+    const espesorMm = datos.espesor_vidrio_mm || 8;
+    const t = espesorMm / 1000; 
+    
+    // Vidrio Múltiples Diseños
+    const acabado = datos.acabado_vidrio || 'transparente';
+    const isEsmerilado = acabado === 'esmerilado';
+    
+    let glassColor = 0xcffafe;
+    if(acabado === 'bronce') glassColor = 0xb38b6d;
+    else if(acabado === 'gris') glassColor = 0x64748b;
+    else if(acabado === 'reflectivo') glassColor = 0xd1d5db;
+    
+    let gMetal = acabado === 'reflectivo' ? 0.9 : 0.1;
+    let gRough = isEsmerilado ? 0.6 : (acabado === 'catedral' ? 0.4 : 0.05);
+    let gTrans = isEsmerilado ? 0.3 : (acabado === 'reflectivo' ? 0.05 : 0.94);
+    let gOpacity = isEsmerilado ? 0.8 : (acabado === 'reflectivo' ? 0.95 : 0.3);
+    
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+        color: glassColor,
+        metalness: gMetal, roughness: gRough,
+        transmission: gTrans, ior: 1.5, thickness: t,
+        clearcoat: 1.0, clearcoatRoughness: isEsmerilado ? 0.5 : 0.1,
+        transparent: true, opacity: gOpacity, side: THREE.DoubleSide
+    });
+    
+    // Textura procedural vidrio catedral
+    if(acabado === 'catedral') {
+        const can = document.createElement('canvas'); can.width = 16; can.height = 16;
+        const ctx = can.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,16,16);
+        ctx.fillStyle = '#888888'; ctx.fillRect(0,0,8,16);
+        const tex = new THREE.CanvasTexture(can);
+        tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(80, 1);
+        glassMaterial.bumpMap = tex;
+        glassMaterial.bumpScale = 0.005;
+    }
+    
+    // Dimensiones de perfilería según Serie de Aluminio
+    const serie = datos.serie_aluminio || 'serie_30';
+    let fThick = 0.042; // ancho visual marco
+    let fDepth = 0.060; // profundidad marco
+    let sThick = 0.040; // ancho visual hoja
+    let sDepth = 0.030; // profundidad hoja
+    
+    if (serie === 'serie_20') {
+        fThick = 0.032; fDepth = 0.045; sThick = 0.030; sDepth = 0.024;
+    } else if (serie === 'serie_25') {
+        fThick = 0.036; fDepth = 0.050; sThick = 0.034; sDepth = 0.026;
+    } else if (serie === 'serie_30') {
+        fThick = 0.042; fDepth = 0.060; sThick = 0.040; sDepth = 0.030;
+    } else if (serie === 'serie_35') {
+        fThick = 0.046; fDepth = 0.070; sThick = 0.045; sDepth = 0.034;
+    } else if (serie === 'serie_40') {
+        fThick = 0.055; fDepth = 0.080; sThick = 0.055; sDepth = 0.038;
+    } else if (serie === 'serie_60') {
+        fThick = 0.062; fDepth = 0.090; sThick = 0.065; sDepth = 0.042;
+    } else if (serie === 'serie_80') {
+        fThick = 0.070; fDepth = 0.100; sThick = 0.070; sDepth = 0.048;
+    } else if (serie === 'tubo_2x1') {
+        fThick = 0.0254; fDepth = 0.0508; sThick = 0.0254; sDepth = 0.0508;
+    } else if (serie === 'tubo_1x1') {
+        fThick = 0.0254; fDepth = 0.0254; sThick = 0.0254; sDepth = 0.0254;
+    } else if (serie === 'tubo_3x1_5') {
+        fThick = 0.0381; fDepth = 0.0762; sThick = 0.0381; sDepth = 0.0762;
+    } else if (serie === 'perfil_u') {
+        fThick = 0.020; fDepth = 0.025; sThick = 0.020; sDepth = 0.025;
+    }
+
+    // Color de perfiles PBR de alta fidelidad
+    let marcoColorHex = 0xd1d5db;
+    let mMetalness = 0.85;
+    let mRoughness = 0.45;
+    
+    const col = datos.color_aluminio;
+    if(col === 'negro') { marcoColorHex = 0x18181b; mMetalness = 0.18; mRoughness = 0.70; }
+    else if(col === 'blanco') { marcoColorHex = 0xf8fafc; mMetalness = 0.05; mRoughness = 0.40; }
+    else if(col === 'antracita') { marcoColorHex = 0x334155; mMetalness = 0.25; mRoughness = 0.55; }
+    else if(col === 'bronce') { marcoColorHex = 0x543d2b; mMetalness = 0.72; mRoughness = 0.35; }
+    else if(col === 'champagne') { marcoColorHex = 0xc8b28f; mMetalness = 0.80; mRoughness = 0.25; }
+    else if(col === 'titanio') { marcoColorHex = 0x64748b; mMetalness = 0.85; mRoughness = 0.22; }
+    else if(col === 'madera') { marcoColorHex = 0x5c3818; mMetalness = 0.08; mRoughness = 0.85; }
+    else if(col === 'oro') { marcoColorHex = 0xd4af37; mMetalness = 0.92; mRoughness = 0.18; }
+    else if(col === 'mate') { marcoColorHex = 0xd1d5db; mMetalness = 0.85; mRoughness = 0.45; }
+    else if(col === 'brillante') { marcoColorHex = 0xf1f5f9; mMetalness = 0.98; mRoughness = 0.04; }
+    
+    const aluMat = new THREE.MeshStandardMaterial({ color: marcoColorHex, metalness: mMetalness, roughness: mRoughness });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.95, roughness: 0.1 });
+
+    // 1. MARCO EXTERIOR Y TORNILLOS DE FIJACIÓN PERIMETRALES
+    if(!isSinMarco) {
+        const outerFrame = createHollowFrame(w, h, fThick, fDepth, aluMat);
+        outerFrame.position.set(0, h/2, 0);
+        objectGroup.add(outerFrame);
+
+        // TORNILLOS EN MARCO EXTERIOR (CARA TRASERA / ATRÁS)
+        const zScrewBack = -fDepth / 2 - 0.001; // estrictamente cara posterior hacia muro
+        
+        // Tornillos en jambas laterales traseras
+        const pasoY = 0.35;
+        for(let y = 0.15; y < h; y += pasoY) {
+            const scL = createScrewMesh(true); scL.position.set(-w/2 + fThick/2, y, zScrewBack); objectGroup.add(scL);
+            const scR = createScrewMesh(true); scR.position.set(w/2 - fThick/2, y, zScrewBack); objectGroup.add(scR);
+        }
+        // Tornillos en dintel y umbral traseros
+        const pasoX = 0.35;
+        for(let x = -w/2 + 0.2; x < w/2; x += pasoX) {
+            const scT = createScrewMesh(true); scT.position.set(x, h - fThick/2, zScrewBack); objectGroup.add(scT);
+            const scB = createScrewMesh(true); scB.position.set(x, fThick/2, zScrewBack); objectGroup.add(scB);
+        }
+    }
+
+    const numHojas = datos.hojas.length || 1;
+    const innerW = isSinMarco ? w : w - fThick * 2;
+    const innerH = isSinMarco ? h : h - fThick * 2;
+    const hojaW = innerW / numHojas;
+    let currentX = -innerW/2 + hojaW/2;
+    
+    datos.hojas.forEach((hoja, i) => {
+        const hW = isSinMarco ? hojaW - 0.01 : hojaW;
+        const hH = isSinMarco ? h - 0.06 : innerH;
+        
+        let zOffset = hoja.tipo === 'movil' ? (sDepth / 2) : (isSinMarco ? 0 : (-sDepth / 2));
+        let yOffset = isSinMarco ? (hH/2 + 0.02) : (h/2);
+        
+        // Paño de vidrio
+        const gW = isSinMarco ? hW : hW - sThick * 1.5;
+        const gH = isSinMarco ? hH : hH - sThick * 1.5;
+        
+        const esDobleVidrio = ['doble', 'bajo_emisivo', 'control_solar', 'acustico', 'triple'].includes(datos.tipo_vidrio);
+        
+        if (esDobleVidrio && !isSinMarco) {
+            // DVH: Dos lunas de vidrio separadas por cámara perimetral (perfil espaciador intercalar con sales desecantes)
+            const paneThick = (datos.espesor_vidrio_mm || 4) / 1000;
+            const camDist = Math.max(0.008, (datos.camara_mm || 16) / 1000);
+            
+            // Luna exterior
+            const geomExt = new THREE.BoxGeometry(gW, gH, paneThick);
+            const meshExt = new THREE.Mesh(geomExt, glassMaterial);
+            meshExt.castShadow = true; meshExt.receiveShadow = true;
+            meshExt.position.set(currentX, yOffset, zOffset - camDist/2);
+            
+            // Luna interior
+            const geomInt = new THREE.BoxGeometry(gW, gH, paneThick);
+            const meshInt = new THREE.Mesh(geomInt, glassMaterial);
+            meshInt.castShadow = true; meshInt.receiveShadow = true;
+            meshInt.position.set(currentX, yOffset, zOffset + camDist/2);
+            
+            // Marco intercalar espaciador perimetral oscuro
+            const spacerMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.9, roughness: 0.3 });
+            const spacerFrame = createHollowFrame(gW, gH, 0.012, camDist, spacerMat);
+            spacerFrame.position.set(currentX, yOffset, zOffset);
+            
+            objectGroup.add(meshExt, meshInt, spacerFrame);
+        } else {
+            const geometry = new THREE.BoxGeometry(gW, gH, t);
+            const mesh = new THREE.Mesh(geometry, glassMaterial);
+            mesh.castShadow = true; mesh.receiveShadow = true;
+            
+            const edgeColor = isEsmerilado ? 0xffffff : 0x6ee7b7;
+            const edges = new THREE.EdgesGeometry(geometry);
+            const edgeLine = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: edgeColor, opacity: 0.8, transparent: true }));
+            mesh.add(edgeLine);
+            mesh.position.set(currentX, yOffset, zOffset);
+            objectGroup.add(mesh);
+        }
+        
+        if (isSinMarco) {
+            // BOX DE BAÑO SIN MARCO
+            if (i === 0) {
+                // Riel superior tubular / barra inox
+                const riel = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, 0.04), chromeMat);
+                riel.position.set(0, h - 0.02, 0.015);
+                riel.castShadow = true;
+                objectGroup.add(riel);
+                
+                // Riel inferior
+                const rielInf = new THREE.Mesh(new THREE.BoxGeometry(w, 0.02, 0.04), chromeMat);
+                rielInf.position.set(0, 0.01, 0.015);
+                objectGroup.add(rielInf);
+                
+                // Anclajes de pared de riel superior con tornillos
+                const ancL = createScrewMesh(); ancL.position.set(-w/2 + 0.01, h - 0.02, 0.04); objectGroup.add(ancL);
+                const ancR = createScrewMesh(); ancR.position.set(w/2 - 0.01, h - 0.02, 0.04); objectGroup.add(ancR);
+            }
+            
+            if (hoja.tipo === 'movil') {
+                // Tirador toallero doble cromado
+                const tirador = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.22, 16), chromeMat);
+                tirador.rotation.x = Math.PI/2;
+                tirador.position.set(currentX + hW/2 - 0.08, yOffset, zOffset);
+                objectGroup.add(tirador);
+
+                // Seguro / Cierre magnético translúcido en el borde de cierre
+                const burlete = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.012, hH, 0.02),
+                    new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 })
+                );
+                burlete.position.set(currentX + hW/2, yOffset, zOffset);
+                objectGroup.add(burlete);
+
+                // 2 Roldanas colgantes superiores en el riel
+                const rolGeom = new THREE.CylinderGeometry(0.015, 0.015, 0.015, 16);
+                const rol1 = new THREE.Mesh(rolGeom, chromeMat); rol1.rotation.z = Math.PI/2; rol1.position.set(currentX - hW/3, h - 0.02, zOffset + 0.015);
+                const rol2 = new THREE.Mesh(rolGeom, chromeMat); rol2.rotation.z = Math.PI/2; rol2.position.set(currentX + hW/3, h - 0.02, zOffset + 0.015);
+                objectGroup.add(rol1, rol2);
+            } else {
+                // Perfil U con tornillos a muro
+                const perfilPared = new THREE.Mesh(new THREE.BoxGeometry(0.02, hH, 0.02), chromeMat);
+                perfilPared.position.set(currentX - hW/2 - 0.01, yOffset, zOffset);
+                objectGroup.add(perfilPared);
+
+                for(let sy = 0.2; sy < hH; sy += 0.4) {
+                    const scU = createScrewMesh(); scU.position.set(currentX - hW/2 - 0.01, sy, zOffset + 0.015); objectGroup.add(scU);
+                }
+            }
+        } else {
+            // VENTANA O PUERTA CON MARCO DE ALUMINIO
+            const sashFrame = createHollowFrame(hW, hH, sThick, sDepth, aluMat);
+            sashFrame.position.set(currentX, yOffset, zOffset);
+            objectGroup.add(sashFrame);
+
+            // Tornillos de escuadra en las 4 esquinas de la hoja (cara trasera)
+            const zSashBack = zOffset - sDepth / 2 - 0.001;
+            const scEsq1 = createScrewMesh(true); scEsq1.position.set(currentX - hW/2 + sThick/2, yOffset - hH/2 + sThick/2, zSashBack);
+            const scEsq2 = createScrewMesh(true); scEsq2.position.set(currentX + hW/2 - sThick/2, yOffset - hH/2 + sThick/2, zSashBack);
+            const scEsq3 = createScrewMesh(true); scEsq3.position.set(currentX - hW/2 + sThick/2, yOffset + hH/2 - sThick/2, zSashBack);
+            const scEsq4 = createScrewMesh(true); scEsq4.position.set(currentX + hW/2 - sThick/2, yOffset + hH/2 - sThick/2, zSashBack);
+            objectGroup.add(scEsq1, scEsq2, scEsq3, scEsq4);
+
+            // MODELADO DEL PERFIL GANCHO / TRASLAPE 3D EN CRUCE DE HOJAS
+            if (numHojas >= 2 && (datos.perfil_tipo === 'gancho' || datos.apertura === 'corrediza')) {
+                const isLeftSash = i < (numHojas / 2);
+                const ganchoEdgeX = isLeftSash ? (currentX + hW/2) : (currentX - hW/2);
+                
+                const ganchoGroup = new THREE.Group();
+                const ganchoFlange = new THREE.Mesh(new THREE.BoxGeometry(0.012, hH, 0.018), aluMat);
+                const ganchoLip = new THREE.Mesh(new THREE.BoxGeometry(0.006, hH, 0.010), aluMat);
+                const lipZ = isLeftSash ? (sDepth * 0.35) : (-sDepth * 0.35);
+                ganchoLip.position.set(isLeftSash ? 0.006 : -0.006, 0, lipZ);
+                ganchoGroup.add(ganchoFlange, ganchoLip);
+                ganchoGroup.position.set(ganchoEdgeX, yOffset, zOffset);
+                objectGroup.add(ganchoGroup);
+            }
+            
+            if (hoja.tipo === 'movil') {
+                if (datos.tipo_estructura === 'puerta') {
+                    // CERRADURA CON MANIJA Y SEGURO A 1.0 METRO
+                    const lockGroup = new THREE.Group();
+                    const lockBody = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.026, 0.22, 0.038),
+                        new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.85, roughness: 0.25 })
+                    );
+                    const handleLever = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.022, 0.025), chromeMat);
+                    handleLever.position.set(-0.04, 0.03, 0.03);
+                    const keyHole = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.04, 16), new THREE.MeshBasicMaterial({ color: 0x09090b }));
+                    keyHole.rotation.x = Math.PI / 2;
+                    keyHole.position.set(0, -0.05, 0.005);
+                    const latch = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.035, 0.02), chromeMat);
+                    latch.position.set(0.015, 0, 0);
+                    lockGroup.add(lockBody, handleLever, keyHole, latch);
+                    lockGroup.position.set(currentX + hW/2 - 0.035, Math.min(1.0, yOffset), zOffset);
+                    objectGroup.add(lockGroup);
+                } else {
+                    // VENTANA: SEGURO EMBUTIDO CARACOL CON TRABA ROJA VISIBLE
+                    const lockGroup = new THREE.Group();
+                    const lockBody = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.022, 0.11, 0.035),
+                        new THREE.MeshStandardMaterial({ color: 0x18181b, metalness: 0.85, roughness: 0.3 })
+                    );
+                    // Botón/traba de seguro en rojo vivo para resaltar
+                    const lockSwitch = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.012, 0.03, 0.042),
+                        new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.5, roughness: 0.2 })
+                    );
+                    lockSwitch.position.set(0, 0.01, 0.006);
+                    const latch = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.022, 0.02), chromeMat);
+                    latch.position.set(0.012, 0, 0);
+                    lockGroup.add(lockBody, lockSwitch, latch);
+                    lockGroup.position.set(currentX + hW/2 - 0.03, yOffset, zOffset);
+                    objectGroup.add(lockGroup);
+                }
+
+                // GARRUCHAS / RODAMIENTOS EN EL RIEL INFERIOR
+                const wheelGeom = new THREE.CylinderGeometry(0.012, 0.012, 0.014, 16);
+                const wheelMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f5, roughness: 0.4 });
+                const w1 = new THREE.Mesh(wheelGeom, wheelMat); w1.rotation.z = Math.PI / 2;
+                w1.position.set(currentX - hW/2 + 0.08, 0.02, zOffset);
+                const w2 = new THREE.Mesh(wheelGeom, wheelMat); w2.rotation.z = Math.PI / 2;
+                w2.position.set(currentX + hW/2 - 0.08, 0.02, zOffset);
+                objectGroup.add(w1, w2);
+            }
+        }
+        
+        currentX += hojaW;
+    });
+
+    // Cotas Físicas
+    drawDimensionLine(new THREE.Vector3(-w/2, 0.08, 0.15), new THREE.Vector3(w/2, 0.08, 0.15), 'x');
+    drawDimensionLine(new THREE.Vector3(-w/2 - 0.08, 0, 0.15), new THREE.Vector3(-w/2 - 0.08, h, 0.15), 'y');
+
+    objectGroup.userData = { w, h, isBox };
+    resetCamara();
+}
+
+function resetCamara() {
+    if(!objectGroup) return;
+    const box = new THREE.Box3().setFromObject(objectGroup);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    
+    const maxDim = Math.max(size.x, size.y);
+    const fov = camera.fov * (Math.PI / 180);
+    let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2)) * 1.5; 
+    
+    camera.position.set(center.x + cameraZ * 0.4, center.y + cameraZ * 0.2, center.z + cameraZ * 0.8);
+    controls.target.set(center.x + (size.x * 0.12), center.y, center.z);
+    controls.update();
+}
+
+// ENFOCAR SEGURO Y TORNILLOS EN PRIMER PLANO 3D
+function enfocarHerrajes() {
+    if (!objectGroup) return;
+    const box = new THREE.Box3().setFromObject(objectGroup);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    
+    const targetX = center.x + (size.x * 0.2);
+    const targetY = center.y;
+    const targetZ = center.z;
+    
+    controls.target.set(targetX, targetY, targetZ);
+    // Ángulo en perspectiva trasera para ver los tornillos de fijación traseros y el seguro
+    camera.position.set(targetX + 0.35, targetY + 0.15, targetZ - 0.75);
+    controls.update();
+}
+
+function updateHtmlLabels() {
+    if (!objectGroup || !camera || !objectGroup.userData.w) return;
+    const w = objectGroup.userData.w;
+    const h = objectGroup.userData.h;
+    
+    const pAncho = new THREE.Vector3(0, 0.08, 0.15);
+    const pAlto = new THREE.Vector3(-w/2 - 0.08, h/2, 0.15);
+    
+    pAncho.applyMatrix4(objectGroup.matrixWorld);
+    pAlto.applyMatrix4(objectGroup.matrixWorld);
+    
+    pAncho.project(camera);
+    pAlto.project(camera);
+    
+    const widthHalf = window.innerWidth / 2;
+    const heightHalf = window.innerHeight / 2;
+    
+    const elAncho = document.getElementById('cota-ancho');
+    elAncho.style.left = ( pAncho.x * widthHalf ) + widthHalf + 'px';
+    elAncho.style.top = - ( pAncho.y * heightHalf ) + heightHalf + 'px';
+    elAncho.style.display = 'block';
+    
+    const elAlto = document.getElementById('cota-alto');
+    elAlto.style.left = ( pAlto.x * widthHalf ) + widthHalf + 'px';
+    elAlto.style.top = - ( pAlto.y * heightHalf ) + heightHalf + 'px';
+    elAlto.style.display = 'block';
+}
+
+function onWindowResize() {
+    const container = document.getElementById('dibujo-contenedor');
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+}
+
+function animate() {
+    animId = requestAnimationFrame(animate);
+    controls.update();
+    
+    if (isRotating && objectGroup) {
+        objectGroup.rotation.y += 0.008;
+        if (objectGroup.rotation.y > 0) {
+            objectGroup.rotation.y = 0;
+            isRotating = false;
+        }
+    }
+    
+    renderer.render(scene, camera);
+    updateHtmlLabels();
+}
+
+function setPrompt(txt) {
+    document.getElementById('ia-prompt').value = txt;
+}
+
+// CONTROL DE PESTAÑAS
+function switchTab(tab) {
+    document.querySelectorAll('.panel-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    document.getElementById(`tab-btn-${tab}`).classList.add('active');
+    document.getElementById(`tab-${tab}`).classList.add('active');
+}
+
+function generarConIA() {
+    let prompt = document.getElementById('ia-prompt').value;
+    let ancho = document.getElementById('ancho').value;
+    let alto = document.getElementById('alto').value;
+    
+    if(!prompt) prompt = "box de baño";
+    
+    document.getElementById('ia-loading').style.display = 'flex';
+    document.getElementById('box-confirmacion').style.display = 'none';
+    
+    if(!scene) init3D();
+    
+    setTimeout(() => {
+        let url = `/cotizaciones/api/dibujo_ia/?prompt=${encodeURIComponent(prompt)}&ancho=${ancho}&alto=${alto}`;
+        fetch(url).then(r => r.json()).then(data => {
+            ultimoDatos = data.datos;
+            build3DModel(data.datos);
+            document.getElementById('texto-interpretado').textContent = "Entendí: " + data.interpretacion;
+            document.getElementById('ia-loading').style.display = 'none';
+            document.getElementById('box-confirmacion').style.display = 'block';
+            document.getElementById('box-prompt').style.display = 'none';
+            
+            document.getElementById('ancho').value = data.datos.ancho_cm;
+            document.getElementById('alto').value = data.datos.alto_cm;
+            document.getElementById('val-ancho').textContent = data.datos.ancho_cm;
+            document.getElementById('val-alto').textContent = data.datos.alto_cm;
+            
+            actualizarPanelTecnico(data.datos);
+            calcularTotal();
+        });
+    }, 400);
+}
+
+function actualizarPanelTecnico(datos) {
+    if(!datos || !datos.analisis_estructural) return;
+    
+    const est = datos.analisis_estructural;
+    const her = datos.despiece_herrajes;
+    
+    // 1. Diagnóstico Estructural Dlubal / ASTM E1300
+    document.getElementById('est-titulo-txt').textContent = est.titulo;
+    document.getElementById('est-desc-txt').textContent = est.advertencia;
+    document.getElementById('est-esp-rec').textContent = est.espesor_recomendado_mm + " mm";
+    document.getElementById('est-flecha').textContent = est.flecha_estimada_mm + " mm";
+    document.getElementById('est-viento').textContent = est.viento_max_kmh + " km/h";
+    
+    // Clases y colores
+    const dotColorClass = est.estado === 'optimo' ? 'dot-verde' : (est.estado === 'limite' ? 'dot-amarillo' : 'dot-rojo');
+    const tagClass = est.estado === 'optimo' ? 'tag-verde' : (est.estado === 'limite' ? 'tag-amarillo' : 'tag-rojo');
+    
+    const dotEl = document.getElementById('est-icono-dot');
+    dotEl.className = 'dot-status ' + dotColorClass;
+    
+    document.getElementById('badge-seguridad-dot').className = 'dot-status ' + dotColorClass;
+    document.getElementById('mini-dot').className = 'dot-status ' + dotColorClass;
+    document.getElementById('mini-est-texto').textContent = est.titulo;
+    
+    const badgeNorma = document.getElementById('est-badge-norma');
+    badgeNorma.className = 'badge-tag ' + tagClass;
+    badgeNorma.textContent = est.estado === 'optimo' ? 'ASTM E1300' : (est.estado === 'limite' ? 'AL LÍMITE' : 'RIESGO');
+    
+    document.getElementById('card-estructural-box').style.borderLeftColor = est.color;
+    
+    // 1.1 Rendimiento Térmico, Acústico y Peso (Criterio OnVentanas / EN 673 / EN 410)
+    if(est.propiedades_vidrio) {
+        const pv = est.propiedades_vidrio;
+        const vNom = document.getElementById('vid-tipo-nombre');
+        if(vNom) vNom.textContent = pv.nombre_tecnico || datos.composicion_vidrio;
+        
+        const vClase = document.getElementById('vid-clase-badge');
+        if(vClase) vClase.textContent = pv.clase_energetica ? pv.clase_energetica.split(' (')[0] : 'Clase A';
+        
+        const vUg = document.getElementById('vid-ug-val');
+        if(vUg) vUg.textContent = pv.ug_termico;
+        
+        const vRw = document.getElementById('vid-rw-val');
+        if(vRw) vRw.textContent = pv.aislamiento_acustico_db;
+        
+        const vG = document.getElementById('vid-g-val');
+        if(vG) vG.textContent = pv.factor_solar_g + '%';
+        
+        const vPeso = document.getElementById('vid-peso-val');
+        if(vPeso) vPeso.textContent = (est.peso_total_vidrio_kg || 0) + ' kg';
+        
+        const vSeg = document.getElementById('vid-seg-humana');
+        if(vSeg) vSeg.textContent = pv.seguridad_humana;
+        
+        const vAhorro = document.getElementById('vid-ahorro-pct');
+        if(vAhorro) vAhorro.textContent = pv.ahorro_energia_pct > 0 ? `+${pv.ahorro_energia_pct}% vs simple` : 'Referencia base (0%)';
+    }
+
+    // 2. Herrajes y Tornillos
+    document.getElementById('badge-tornillos-cnt').textContent = her.total_tornillos;
+    document.getElementById('her-total-tornillos').textContent = her.total_tornillos + " tornillos";
+    document.getElementById('mini-tornillos-texto').textContent = her.total_tornillos + " Tornillos";
+    
+    const listaContainer = document.getElementById('her-lista-items');
+    listaContainer.innerHTML = '';
+    
+    her.items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'herraje-item';
+        row.innerHTML = `
+            <div class="herraje-info">
+                <i class="bi ${item.icono} herraje-icon"></i>
+                <div>
+                    <span class="herraje-name">${item.nombre}</span>
+                    <span class="herraje-sub">${item.detalle}</span>
+                </div>
+            </div>
+            <span class="herraje-cant">${item.cantidad}</span>
+        `;
+        listaContainer.appendChild(row);
+    });
+
+    // 3. Perfiles de Aluminio y Optimización de Cortes (Criterio Luminio)
+    if(datos.despiece_perfiles) {
+        const prf = datos.despiece_perfiles;
+        const bCnt = document.getElementById('badge-barras-cnt');
+        if(bCnt) bCnt.textContent = prf.barras_6m_requeridas + " b";
+        
+        const sTit = document.getElementById('prf-serie-titulo');
+        if(sTit) sTit.textContent = prf.serie_nombre + (prf.dimension_seccion ? ' · ' + prf.dimension_seccion : '');
+        
+        const badgeColor = document.getElementById('prf-color-badge');
+        if(badgeColor) badgeColor.textContent = datos.color_aluminio_nombre || datos.color_aluminio;
+        
+        const b6m = document.getElementById('prf-barras-6m');
+        if(b6m) b6m.textContent = prf.barras_6m_requeridas;
+        
+        const mUt = document.getElementById('prf-metros-util');
+        if(mUt) mUt.textContent = prf.metros_lineales_utiles + " m";
+        
+        const mPct = document.getElementById('prf-merma-pct');
+        if(mPct) mPct.textContent = prf.porcentaje_merma + "%";
+        
+        const pKg = document.getElementById('prf-peso-kg');
+        if(pKg) pKg.textContent = prf.peso_estimado_kg + " kg";
+        
+        const aTxt = document.getElementById('prf-aprov-txt');
+        if(aTxt) aTxt.textContent = prf.porcentaje_aprovechamiento + "%";
+        
+        const rTxt = document.getElementById('prf-retazo-txt');
+        if(rTxt) rTxt.textContent = prf.merma_retazo_m + " m";
+        
+        const bU = document.getElementById('prf-bar-util');
+        if(bU) bU.style.width = prf.porcentaje_aprovechamiento + "%";
+        
+        const bM = document.getElementById('prf-bar-merma');
+        if(bM) bM.style.width = prf.porcentaje_merma + "%";
+        
+        const tPz = document.getElementById('prf-total-piezas');
+        if(tPz) tPz.textContent = prf.total_piezas + " piezas";
+        
+        const cortesContainer = document.getElementById('prf-lista-cortes');
+        if(cortesContainer) {
+            cortesContainer.innerHTML = '';
+            prf.cortes.forEach(c => {
+                const row = document.createElement('div');
+                row.className = 'corte-item';
+                row.innerHTML = `
+                    <div class="corte-info">
+                        <span class="corte-code">${c.codigo}</span>
+                        <div>
+                            <span class="corte-desc">${c.perfil}</span>
+                            <span class="corte-formula">${c.formula}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center;">
+                        <span class="corte-badge-cant">${c.cantidad}x</span>
+                        <span class="corte-dim">${c.longitud_cm} cm</span>
+                        <span class="corte-ang">(${c.corte})</span>
+                    </div>
+                `;
+                cortesContainer.appendChild(row);
+            });
+        }
+    }
+}
+
+function onMedidasChange() {
+    let ancho = parseFloat(document.getElementById('ancho').value) || 0;
+    let alto = parseFloat(document.getElementById('alto').value) || 0;
+    document.getElementById('val-ancho').textContent = ancho;
+    document.getElementById('val-alto').textContent = alto;
+    calcularTotal();
+    
+    if(ultimoDatos) {
+        ultimoDatos.ancho_cm = ancho;
+        ultimoDatos.alto_cm = alto;
+        build3DModel(ultimoDatos);
+        
+        // Simular llamada de actualización para refrescar cálculo
+        let prompt = document.getElementById('ia-prompt').value;
+        let url = `/cotizaciones/api/dibujo_ia/?prompt=${encodeURIComponent(prompt)}&ancho=${ancho}&alto=${alto}`;
+        fetch(url).then(r => r.json()).then(data => {
+            ultimoDatos = data.datos;
+            actualizarPanelTecnico(data.datos);
+        });
+    }
+}
+
+function aceptarModelo() {
+    document.getElementById('box-confirmacion').style.display = 'none';
+    document.getElementById('box-prompt').style.display = 'block';
+}
+
+function corregirModelo() {
+    document.getElementById('box-confirmacion').style.display = 'none';
+    document.getElementById('box-prompt').style.display = 'block';
+    document.getElementById('ia-prompt').focus();
+}
+
+function calcularTotal() {
+    let ancho = parseFloat(document.getElementById('ancho').value) || 0;
+    let alto = parseFloat(document.getElementById('alto').value) || 0;
+    let area_m2 = (ancho / 100) * (alto / 100);
+    let precio_m2 = parseFloat(document.getElementById('precio_m2').value) || 0;
+    let tc = parseFloat(document.getElementById('tipo_cambio').value) || 6.97;
+    
+    let total_us = area_m2 * precio_m2;
+    document.getElementById('total-us').textContent = "$us " + total_us.toFixed(2);
+    document.getElementById('precio-vivo').textContent = "Bs " + (total_us * tc).toFixed(2);
+    const tcLbl = document.getElementById('tc-valor-lbl');
+    if (tcLbl) tcLbl.textContent = tc.toFixed(2);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    calcularTotal();
+    init3D();
+    setTimeout(() => generarConIA(), 800);
+});
+</script>
+{% endblock %}

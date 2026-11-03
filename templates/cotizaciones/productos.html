@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Catálogo | Santiago Glass{% endblock %}
+{% block page_title %}Catálogo de Productos{% endblock %}
+{% block content %}
+<div class="card fade-in">
+    <div class="card-header">
+        <span><i class="bi bi-grid-3x3-gap" style="color:var(--gold); margin-right:8px;"></i> Catálogo</span>
+        <a href="{% url 'nuevo_producto' %}" class="btn btn-red btn-sm"><i class="bi bi-plus-lg"></i> Nuevo Producto</a>
+    </div>
+    <div class="card-body-0 table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Unidad</th>
+                    <th>Precio ($us)</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in productos %}
+                <tr>
+                    <td style="font-weight:bold; color:var(--text);">{{ p.nombre }}</td>
+                    <td style="color:var(--text-dim);">{{ p.descripcion|truncatechars:50 }}</td>
+                    <td>{{ p.get_unidad_medida_display }}</td>
+                    <td style="font-weight:bold; color:var(--gold);">$us {{ p.precio_unitario }}</td>
+                    <td><span class="badge badge-{% if p.activo %}aprobada{% else %}rechazada{% endif %}">{% if p.activo %}Activo{% else %}Inactivo{% endif %}</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-dim);">No hay productos en el catálogo.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
