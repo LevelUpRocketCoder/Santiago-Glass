@@ -4,14 +4,23 @@
 
 {% block content %}
 <style>
-.top-nav { box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 100; position: relative; }
 body { overflow: hidden; margin: 0; }
+.app-content { padding: 0 !important; max-width: none !important; }
 
-/* CONTENEDOR 3D */
+/* CONTENEDOR 3D ADAPTADO A SIDEBAR */
 .canvas-wrapper {
-    position: fixed; top: 70px; left: 0; right: 0; bottom: 0;
+    position: fixed;
+    top: var(--topbar-h, 68px);
+    left: var(--sidebar-w, 260px);
+    right: 0;
+    bottom: 0;
     background: radial-gradient(circle at center, #3D4E72 0%, #0f1a30 100%);
-    z-index: 1; overflow: hidden;
+    z-index: 1;
+    overflow: hidden;
+    transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.app-layout.sidebar-collapsed .canvas-wrapper {
+    left: var(--sidebar-w-collapsed, 76px);
 }
 #dibujo-contenedor { width: 100%; height: 100%; }
 
@@ -25,11 +34,30 @@ body { overflow: hidden; margin: 0; }
 
 /* PANEL FLOTANTE SUPERIOR IZQUIERDA */
 .panel-flotante {
-    position: fixed; top: 90px; left: 20px; width: 440px;
-    background: rgba(29, 52, 96, 0.92); backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85); z-index: 10; display: flex; flex-direction: column;
-    max-height: calc(100vh - 110px); overflow-y: auto; scrollbar-width: thin;
+    position: fixed;
+    top: calc(var(--topbar-h, 68px) + 16px);
+    left: calc(var(--sidebar-w, 260px) + 16px);
+    width: 440px;
+    background: rgba(29, 52, 96, 0.92);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.app-layout.sidebar-collapsed .panel-flotante {
+    left: calc(var(--sidebar-w-collapsed, 76px) + 16px);
+}
+
+@media (max-width: 992px) {
+    .canvas-wrapper { left: 0 !important; }
+    .panel-flotante { left: 10px !important; width: calc(100vw - 20px) !important; max-height: calc(100vh - 120px) !important; }
 }
 .panel-flotante::-webkit-scrollbar { width: 6px; }
 .panel-flotante::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }

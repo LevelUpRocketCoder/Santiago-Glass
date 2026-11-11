@@ -12,87 +12,203 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Chart.js para el Dashboard -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Estilos Principales -->
+    <!-- Estilos Principales con Paleta Némesis -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
 
-<!-- Navegación Superior -->
-<nav class="top-nav">
-    <div class="nav-container">
-        <!-- Logo y Marca -->
-        <a href="{% url 'dashboard' %}" class="brand-link">
-            <img src="{% static 'img/logo.jpg' %}" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
-            <div class="brand-text">
-                <span class="brand-name">Santiago Glass</span>
-                <span class="brand-sub">SISTEMA DE GESTIÓN</span>
+<div class="app-layout" id="appLayout">
+    <!-- ══════════════════════════════════════════════════════════════
+         SIDEBAR NAVIGATION STARTER KIT (Paleta Némesis)
+         ══════════════════════════════════════════════════════════════ -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Encabezado / Marca -->
+        <div class="sidebar-header">
+            <a href="{% url 'dashboard' %}" class="sidebar-brand">
+                <div class="brand-icon-box">
+                    <i class="bi bi-layers-half"></i>
+                </div>
+                <div class="sidebar-brand-text">
+                    <span class="sidebar-brand-title">Santiago Glass</span>
+                    <span class="sidebar-brand-sub">ALUMINIO & VIDRIO</span>
+                </div>
+            </a>
+            <button type="button" class="sidebar-collapse-btn" id="sidebarToggle" title="Colapsar / Expandir barra lateral">
+                <i class="bi bi-layout-sidebar-inset" id="sidebarToggleIcon"></i>
+            </button>
+        </div>
+
+        <!-- Menú de Navegación Vertical -->
+        <div class="sidebar-menu-wrapper">
+            <div class="sidebar-section-title">PRINCIPAL</div>
+            <nav class="sidebar-nav">
+                <!-- Dashboard -->
+                <a href="{% url 'dashboard' %}" 
+                   class="sidebar-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                   data-tooltip="Dashboard">
+                    <i class="bi bi-grid-1x2-fill sidebar-item-icon"></i>
+                    <span class="sidebar-item-label">Dashboard</span>
+                </a>
+
+                <!-- Clientes -->
+                <a href="{% url 'lista_clientes' %}" 
+                   class="sidebar-item {% if 'cliente' in request.path %}active{% endif %}" 
+                   data-tooltip="Clientes">
+                    <i class="bi bi-people-fill sidebar-item-icon"></i>
+                    <span class="sidebar-item-label">Clientes</span>
+                </a>
+
+                <!-- Cotizaciones -->
+                <a href="{% url 'lista_cotizaciones' %}" 
+                   class="sidebar-item {% if 'cotizacion' in request.path and 'diseno' not in request.path %}active{% endif %}" 
+                   data-tooltip="Cotizaciones">
+                    <i class="bi bi-file-earmark-text-fill sidebar-item-icon"></i>
+                    <span class="sidebar-item-label">Cotizaciones</span>
+                </a>
+
+                <!-- Proyectos Kanban -->
+                <a href="{% url 'tablero' %}" 
+                   class="sidebar-item {% if 'proyecto' in request.path %}active{% endif %}" 
+                   data-tooltip="Proyectos">
+                    <i class="bi bi-kanban-fill sidebar-item-icon"></i>
+                    <span class="sidebar-item-label">Proyectos</span>
+                </a>
+
+                <!-- Catálogo de Productos -->
+                <a href="{% url 'lista_productos' %}" 
+                   class="sidebar-item {% if 'producto' in request.path %}active{% endif %}" 
+                   data-tooltip="Catálogo">
+                    <i class="bi bi-box-seam-fill sidebar-item-icon"></i>
+                    <span class="sidebar-item-label">Catálogo</span>
+                </a>
+
+                <!-- Reportes -->
+                <a href="{% url 'reporte' %}" 
+                   class="sidebar-item {% if 'reporte' in request.path %}active{% endif %}" 
+                   data-tooltip="Reportes">
+                    <i class="bi bi-bar-chart-fill sidebar-item-icon"></i>
+                    <span class="sidebar-item-label">Reportes</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-section-title" style="margin-top: 14px;">HERRAMIENTAS</div>
+            <nav class="sidebar-nav">
+                <!-- Asistente de Diseño 3D & IA -->
+                <a href="{% url 'diseno_wizard' %}" 
+                   class="sidebar-item sidebar-item-special {% if 'diseno' in request.path %}active{% endif %}" 
+                   data-tooltip="Diseño 3D e IA">
+                    <i class="bi bi-vector-pen sidebar-item-icon"></i>
+                    <span class="sidebar-item-label">Diseño 3D & IA</span>
+                    <span class="sidebar-item-badge">PRO</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Pie de Sidebar: Perfil de Usuario y Logout (Figma Kit) -->
+        <div class="sidebar-footer">
+            <div class="sidebar-user-card">
+                <div class="sidebar-user-avatar">{{ request.user.username.0|upper|default:"A" }}</div>
+                <div class="sidebar-user-details">
+                    <span class="sidebar-user-name">{{ request.user.username|default:"admin" }}</span>
+                    <span class="sidebar-user-role">Administrador</span>
+                </div>
             </div>
-        </a>
-
-        <!-- Enlaces Centrados -->
-                <div class="nav-links">
-            <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                <i class="bi bi-grid-1x2"></i> Dashboard
-            </a>
-            <a href="{% url 'lista_clientes' %}" class="nav-link {% if 'cliente' in request.path %}active{% endif %}">
-                <i class="bi bi-people"></i> Clientes
-            </a>
-            <a href="{% url 'lista_cotizaciones' %}" class="nav-link {% if 'cotizacion' in request.path %}active{% endif %}">
-                <i class="bi bi-file-earmark-text"></i> Cotizaciones
-            </a>
-            <a href="{% url 'tablero' %}" class="nav-link {% if 'proyecto' in request.path %}active{% endif %}">
-                <i class="bi bi-kanban"></i> Proyectos
-            </a>
-            <a href="{% url 'lista_productos' %}" class="nav-link {% if 'producto' in request.path %}active{% endif %}">
-                <i class="bi bi-grid-3x3-gap"></i> Catálogo
-            </a>
-            <a href="{% url 'reporte' %}" class="nav-link {% if 'reporte' in request.path %}active{% endif %}">
-                <i class="bi bi-bar-chart"></i> Reportes
-            </a>
-            <a href="{% url 'diseno_wizard' %}" class="nav-link {% if 'diseno' in request.path %}active{% endif %}" style="color:var(--nemesis-terracotta); border: 1px solid var(--primary-border); background: rgba(175,88,59,0.15);">
-                <i class="bi bi-vector-pen"></i> Diseño
+            <a href="{% url 'logout' %}" class="sidebar-logout-btn" title="Cerrar sesión">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Cerrar Sesión</span>
             </a>
         </div>
+    </aside>
 
-        <!-- Usuario -->
-        <div class="user-pill">
-            <div class="user-avatar">{{ request.user.username.0|upper }}</div>
-            <span class="user-name">{{ request.user.username }}</span>
-            <a href="#" class="logout-btn"><i class="bi bi-box-arrow-right"></i></a>
-        </div>
-    </div>
-</nav>
+    <!-- Fondo oscuro táctil para móviles -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-<!-- Page Hero Bar (Opcional, para contexto) -->
-<div class="page-hero">
-    <div class="hero-container">
-        <h1 class="hero-title">{% block page_title %}Dashboard{% endblock %}</h1>
+    <!-- ══════════════════════════════════════════════════════════════
+         ÁREA PRINCIPAL DE CONTENIDO
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="app-main">
+        <!-- Barra Superior (Topbar) -->
+        <header class="app-topbar">
+            <div class="topbar-left">
+                <button type="button" class="mobile-toggle-btn" id="mobileMenuBtn" aria-label="Abrir menú">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="topbar-breadcrumbs">
+                    <span class="topbar-breadcrumb-parent">Santiago Glass</span>
+                    <i class="bi bi-chevron-right topbar-breadcrumb-sep"></i>
+                    <h1 class="topbar-page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-status-pill hide-mobile">
+                    <span class="status-dot-pulse"></span>
+                    <span>Activo</span>
+                </div>
+                <a href="{% url 'nueva_cotizacion' %}" class="btn btn-red btn-sm">
+                    <i class="bi bi-plus-lg"></i>
+                    <span class="hide-mobile">Nueva Cotización</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Contenido de la Página -->
+        <main class="app-content">
+            <!-- Mensajes del Sistema -->
+            {% if messages %}
+            <div class="messages-container mb-24">
+                {% for m in messages %}
+                <div class="alert alert-{{ m.tags }}">
+                    {{ m }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Bloque de Contenido Dinámico -->
+            {% block content %}
+            {% endblock %}
+        </main>
     </div>
 </div>
 
-<!-- Contenedor Principal -->
-<main class="main-container">
-    <!-- Mensajes del Sistema -->
-    {% if messages %}
-    <div class="messages-container mb-24">
-        {% for m in messages %}
-        <div class="alert alert-{{ m.tags }}">
-            {{ m }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
+<!-- JavaScript para control interactivo de la Sidebar -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const appLayout = document.getElementById('appLayout');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 
-    <!-- Contenido Dinámico -->
-    {% block content %}
-    {% endblock %}
-</main>
+    // Recuperar estado colapsado guardado en localStorage
+    if (localStorage.getItem('sg_sidebar_collapsed') === 'true') {
+        appLayout.classList.add('sidebar-collapsed');
+    }
+
+    // Toggle para colapsar / expandir sidebar en escritorio
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            appLayout.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('sg_sidebar_collapsed', appLayout.classList.contains('sidebar-collapsed'));
+        });
+    }
+
+    // Toggle móvil (drawer)
+    if (mobileMenuBtn && sidebar && sidebarBackdrop) {
+        mobileMenuBtn.addEventListener('click', function() {
+            sidebar.classList.add('mobile-open');
+            sidebarBackdrop.classList.add('active');
+        });
+
+        sidebarBackdrop.addEventListener('click', function() {
+            sidebar.classList.remove('mobile-open');
+            sidebarBackdrop.classList.remove('active');
+        });
+    }
+});
+</script>
 
 {% block extra_js %}
 {% endblock %}
 </body>
 </html>
-
-
-
-
