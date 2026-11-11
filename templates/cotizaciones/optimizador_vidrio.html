@@ -1,0 +1,569 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Optimizador de Planchas de Vidrio 2D | Santiago Glass{% endblock %}
+{% block page_title %}Optimizador de Cortes de Planchas de Vidrio{% endblock %}
+
+{% block content %}
+<style>
+/* ── ESTILOS DEL OPTIMIZADOR DE CORTES 2D (PALETA MODERNA) ── */
+.opt-grid {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 1100px) {
+    .opt-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.opt-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+}
+
+.opt-card-head {
+    padding: 1.1rem 1.4rem;
+    background: #0E1726;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #F1F5F9;
+}
+
+.opt-card-body {
+    padding: 1.3rem;
+}
+
+/* Tabla de Piezas a Cortar */
+.piezas-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.piezas-table th {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 6px 6px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+
+.piezas-table td {
+    padding: 5px 4px;
+    vertical-align: middle;
+}
+
+.table-input {
+    width: 100%;
+    padding: 6px 8px;
+    background: #0B1426;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: #F1F5F9;
+    font-size: 0.88rem;
+    font-family: inherit;
+    outline: none;
+    transition: var(--transition);
+}
+
+.table-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.btn-del-row {
+    background: transparent;
+    border: none;
+    color: #EF4444;
+    cursor: pointer;
+    font-size: 1.05rem;
+    padding: 4px;
+    transition: transform 0.2s;
+}
+
+.btn-del-row:hover {
+    transform: scale(1.15);
+}
+
+/* Métricas del Plano de Corte */
+.opt-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.opt-kpi-box {
+    background: #0E1726;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    text-align: center;
+}
+
+.opt-kpi-val {
+    font-family: var(--font-head);
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #F1F5F9;
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+
+.opt-kpi-lbl {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    font-weight: 600;
+}
+
+/* Tarjeta de Cada Plancha de Vidrio */
+.sheet-diagram-card {
+    background: #0E1726;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.sheet-diagram-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.sheet-svg-wrapper {
+    background: #070D18;
+    border: 2px solid #1E293B;
+    border-radius: 8px;
+    padding: 12px;
+    overflow-x: auto;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+}
+
+.sheet-svg {
+    width: 100%;
+    height: auto;
+    max-height: 520px;
+    display: block;
+}
+
+/* Estilos de impresión de plano de corte */
+@media print {
+    .sidebar, .app-topbar, .opt-controls-col, .sheet-action-btns, .sidebar-backdrop {
+        display: none !important;
+    }
+    .app-main { margin-left: 0 !important; }
+    .app-content { padding: 0 !important; max-width: 100% !important; }
+    .opt-grid { display: block !important; }
+    .sheet-diagram-card {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border: 2px solid #000000 !important;
+        page-break-after: always;
+        margin-bottom: 2cm !important;
+    }
+    .sheet-diagram-head { color: #000000 !important; border-bottom: 2px solid #000000 !important; }
+    .sheet-svg-wrapper { background: #ffffff !important; border: 2px solid #000000 !important; }
+    body { background: #ffffff !important; color: #000000 !important; }
+    @page { size: landscape; margin: 1cm; }
+}
+</style>
+
+<div class="opt-grid fade-in">
+    <!-- ══════════════════════════════════════════════════════════════
+         COLUMNA IZQUIERDA: CONFIGURACIÓN Y LISTA DE PIEZAS
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="opt-controls-col">
+        {% if cotizacion %}
+        <div class="alert alert-success" style="padding:0.75rem 1rem; margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between;">
+            <div>
+                <i class="bi bi-file-earmark-check-fill me-1"></i>
+                Cotización <strong>{{ cotizacion.numero }}</strong>
+            </div>
+            <a href="{% url 'detalle_cotizacion' cotizacion.pk %}" class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:0.75rem;">
+                Ver Cotización
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="opt-card mb-24">
+            <div class="opt-card-head">
+                <span><i class="bi bi-aspect-ratio text-warning me-2"></i> Plancha Madre (Bruta)</span>
+            </div>
+            <div class="opt-card-body">
+                <!-- Selector de Plancha Estándar -->
+                <div class="form-group mb-3">
+                    <label class="form-label">Formato Estándar de Fábrica</label>
+                    <select id="selectFormatoPlancha" class="form-select" onchange="cambiarFormatoPlancha()">
+                        <option value="3600x2400" selected>3600 × 2400 mm — Jumbo Estándar</option>
+                        <option value="3300x2140">3300 × 2140 mm — Hoja Clásica</option>
+                        <option value="3600x2500">3600 × 2500 mm — Jumbo Grande</option>
+                        <option value="2400x1800">2400 × 1800 mm — Media Hoja</option>
+                        <option value="custom">Personalizada (Manual)</option>
+                    </select>
+                </div>
+
+                <div class="grid-2 mb-3">
+                    <div>
+                        <label class="form-label">Ancho Plancha (mm)</label>
+                        <input type="number" id="inputAnchoPlancha" class="form-control" value="{{ ancho_plancha|default:3600 }}">
+                    </div>
+                    <div>
+                        <label class="form-label">Alto Plancha (mm)</label>
+                        <input type="number" id="inputAltoPlancha" class="form-control" value="{{ alto_plancha|default:2400 }}">
+                    </div>
+                </div>
+
+                <div class="grid-2 mb-3">
+                    <div>
+                        <label class="form-label">Espesor / Vidrio</label>
+                        <select id="selectEspesor" class="form-select">
+                            <option value="8mm">Templado 8 mm</option>
+                            <option value="6mm">Templado 6 mm</option>
+                            <option value="10mm">Templado 10 mm</option>
+                            <option value="4mm">Float 4 mm Simple</option>
+                            <option value="dvh">DVH Doble Vidriado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Margen de Cizalla (mm)</label>
+                        <input type="number" id="inputMargen" class="form-control" value="{{ margen|default:4 }}" min="1" max="20">
+                    </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+                    <input type="checkbox" id="checkRotacion" checked style="width:16px; height:16px; accent-color:var(--primary); cursor:pointer;">
+                    <label for="checkRotacion" style="font-size:0.85rem; color:#F1F5F9; cursor:pointer;">
+                        Permitir rotación de piezas 90° (Recomendado)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Vidrios a Cortar -->
+        <div class="opt-card">
+            <div class="opt-card-head">
+                <span><i class="bi bi-scissors text-warning me-2"></i> Piezas de Vidrio a Cortar</span>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="agregarFilaPieza()" style="padding:4px 10px; font-size:0.78rem;">
+                    <i class="bi bi-plus-lg"></i> Agregar Vidrio
+                </button>
+            </div>
+            <div class="opt-card-body">
+                <div style="max-height: 380px; overflow-y:auto; padding-right:2px;">
+                    <table class="piezas-table" id="tablaPiezas">
+                        <thead>
+                            <tr>
+                                <th>Referencia</th>
+                                <th style="width:75px;">Ancho (mm)</th>
+                                <th style="width:75px;">Alto (mm)</th>
+                                <th style="width:55px;">Cant.</th>
+                                <th style="width:25px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyPiezas">
+                            <!-- Las filas se renderizan dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="button" class="btn btn-red w-full mt-3" onclick="ejecutarOptimizacion()" style="justify-content:center; padding:12px; font-size:0.95rem;">
+                    <i class="bi bi-lightning-charge-fill"></i> CALCULAR PLANO DE CORTE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         COLUMNA DERECHA: RESULTADOS Y PLANO DE CORTE 2D
+         ══════════════════════════════════════════════════════════════ -->
+    <div class="opt-results-col">
+        <!-- Barra de Herramientas de Salida -->
+        <div class="sheet-action-btns mb-24" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:0.9rem; color:var(--text-dim);">
+                Plano de corte 2D generado por algoritmo de guillotina
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="window.print()">
+                    <i class="bi bi-printer-fill"></i> Imprimir Plano de Taller
+                </button>
+                {% if cotizacion %}
+                <a href="{% url 'salida_articulos' cotizacion.pk %}" class="btn btn-ghost btn-sm" style="color:var(--primary); border-color:rgba(245,158,11,0.3);">
+                    <i class="bi bi-box-seam"></i> Salida de Almacén
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- KPIs Resumen -->
+        <div class="opt-kpis" id="kpiContainer">
+            <div class="opt-kpi-box">
+                <div class="opt-kpi-val" id="kpiPlanchas" style="color:var(--primary);">{{ resultado.total_planchas }}</div>
+                <div class="opt-kpi-lbl">Planchas Necesarias</div>
+            </div>
+            <div class="opt-kpi-box">
+                <div class="opt-kpi-val" id="kpiAprovechamiento" style="color:var(--green);">{{ resultado.aprovechamiento_global }}%</div>
+                <div class="opt-kpi-lbl">Aprovechamiento Útil</div>
+            </div>
+            <div class="opt-kpi-box">
+                <div class="opt-kpi-val" id="kpiMerma" style="color:#EF4444;">{{ resultado.merma_global }}%</div>
+                <div class="opt-kpi-lbl">Merma / Desperdicio</div>
+            </div>
+            <div class="opt-kpi-box">
+                <div class="opt-kpi-val" id="kpiPiezas" style="color:#38BDF8;">{{ resultado.total_piezas }}</div>
+                <div class="opt-kpi-lbl">Total Piezas Cortadas</div>
+            </div>
+            <div class="opt-kpi-box">
+                <div class="opt-kpi-val" id="kpiArea" style="font-size:1.5rem;">{{ resultado.area_cortada_m2 }} m²</div>
+                <div class="opt-kpi-lbl">Área Neta Requerida</div>
+            </div>
+        </div>
+
+        <!-- Contenedor Dinámico de Diagramas SVG de Planchas -->
+        <div id="diagramasPlanchasContainer">
+            <!-- Renderizado por JavaScript -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Datos iniciales inyectados desde el backend
+let datosResultado = {{ resultado_json|safe }};
+let piezasLista = {{ piezas_json|safe }};
+
+document.addEventListener("DOMContentLoaded", function() {
+    renderizarTablaPiezas();
+    renderizarPlanchas(datosResultado);
+});
+
+// Cambiar medidas de plancha predefinidas
+function cambiarFormatoPlancha() {
+    const sel = document.getElementById("selectFormatoPlancha").value;
+    const inpW = document.getElementById("inputAnchoPlancha");
+    const inpH = document.getElementById("inputAltoPlancha");
+
+    if (sel === "3600x2400") { inpW.value = 3600; inpH.value = 2400; }
+    else if (sel === "3300x2140") { inpW.value = 3300; inpH.value = 2140; }
+    else if (sel === "3600x2500") { inpW.value = 3600; inpH.value = 2500; }
+    else if (sel === "2400x1800") { inpW.value = 2400; inpH.value = 1800; }
+}
+
+// Renderizar filas de la tabla de piezas
+function renderizarTablaPiezas() {
+    const tbody = document.getElementById("tbodyPiezas");
+    tbody.innerHTML = "";
+
+    piezasLista.forEach((p, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>
+                <input type="text" class="table-input" value="${p.label || 'Pieza ' + (idx+1)}" onchange="actualizarPieza(${idx}, 'label', this.value)">
+            </td>
+            <td>
+                <input type="number" class="table-input text-end" value="${p.ancho}" min="50" onchange="actualizarPieza(${idx}, 'ancho', this.value)">
+            </td>
+            <td>
+                <input type="number" class="table-input text-end" value="${p.alto}" min="50" onchange="actualizarPieza(${idx}, 'alto', this.value)">
+            </td>
+            <td>
+                <input type="number" class="table-input text-center" value="${p.cantidad || 1}" min="1" onchange="actualizarPieza(${idx}, 'cantidad', this.value)">
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn-del-row" onclick="eliminarFilaPieza(${idx})" title="Eliminar">&times;</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function actualizarPieza(idx, campo, valor) {
+    if (campo === 'ancho' || campo === 'alto' || campo === 'cantidad') {
+        piezasLista[idx][campo] = parseFloat(valor) || 0;
+    } else {
+        piezasLista[idx][campo] = valor;
+    }
+}
+
+function agregarFilaPieza() {
+    piezasLista.push({
+        label: 'Vidrio ' + (piezasLista.length + 1),
+        ancho: 1000,
+        alto: 800,
+        cantidad: 1,
+        desc: 'Float'
+    });
+    renderizarTablaPiezas();
+}
+
+function eliminarFilaPieza(idx) {
+    if (piezasLista.length > 1) {
+        piezasLista.splice(idx, 1);
+        renderizarTablaPiezas();
+    } else {
+        alert("Debe haber al menos una pieza en la lista.");
+    }
+}
+
+// Ejecutar optimización vía API AJAX
+function ejecutarOptimizacion() {
+    const anchoPlancha = parseFloat(document.getElementById("inputAnchoPlancha").value) || 3600;
+    const altoPlancha = parseFloat(document.getElementById("inputAltoPlancha").value) || 2400;
+    const margen = parseFloat(document.getElementById("inputMargen").value) || 4;
+    const permitirRotacion = document.getElementById("checkRotacion").checked;
+
+    const payload = {
+        piezas: piezasLista,
+        ancho_plancha: anchoPlancha,
+        alto_plancha: altoPlancha,
+        margen: margen,
+        permitir_rotacion: permitirRotacion
+    };
+
+    fetch("{% url 'api_optimizar_vidrio' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'ok') {
+            datosResultado = data.data;
+            actualizarKPIs(datosResultado);
+            renderizarPlanchas(datosResultado);
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Error al comunicarse con el servidor.");
+    });
+}
+
+function actualizarKPIs(res) {
+    document.getElementById("kpiPlanchas").textContent = res.total_planchas;
+    document.getElementById("kpiAprovechamiento").textContent = res.aprovechamiento_global + "%";
+    document.getElementById("kpiMerma").textContent = res.merma_global + "%";
+    document.getElementById("kpiPiezas").textContent = res.total_piezas;
+    document.getElementById("kpiArea").textContent = res.area_cortada_m2 + " m²";
+}
+
+// Renderizar planos 2D a escala en SVG
+function renderizarPlanchas(res) {
+    const container = document.getElementById("diagramasPlanchasContainer");
+    container.innerHTML = "";
+
+    if (!res.planchas || res.planchas.length === 0) {
+        container.innerHTML = `<div class="alert alert-info">No se encontraron cortes calculados.</div>`;
+        return;
+    }
+
+    res.planchas.forEach(sheet => {
+        const card = document.createElement("div");
+        card.className = "sheet-diagram-card fade-in";
+
+        const W = sheet.ancho;
+        const H = sheet.alto;
+
+        // Construir SVG dinámico
+        let svgPieces = "";
+        sheet.piezas.forEach(p => {
+            // Fondo de la pieza
+            svgPieces += `
+                <g class="glass-cut-piece">
+                    <rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" 
+                          fill="${p.color}" fill-opacity="0.28" 
+                          stroke="${p.color}" stroke-width="2.5" rx="3" />
+                    <!-- Línea de cota horizontal -->
+                    <line x1="${p.x}" y1="${p.y+12}" x2="${p.x+p.w}" y2="${p.y+12}" stroke="${p.color}" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+                    <!-- Texto de etiqueta -->
+                    <text x="${p.x + p.w/2}" y="${p.y + p.h/2 - 8}" 
+                          font-family="sans-serif" font-size="${Math.max(16, Math.min(36, p.w/12))}" font-weight="bold" 
+                          fill="#ffffff" text-anchor="middle" dominant-baseline="middle">
+                        ${p.id}
+                    </text>
+                    <!-- Dimensiones -->
+                    <text x="${p.x + p.w/2}" y="${p.y + p.h/2 + 20}" 
+                          font-family="monospace" font-size="${Math.max(14, Math.min(28, p.w/14))}" font-weight="600" 
+                          fill="#94A3B8" text-anchor="middle" dominant-baseline="middle">
+                        ${p.w} × ${p.h} mm ${p.rotada ? '⟳' : ''}
+                    </text>
+                </g>
+            `;
+        });
+
+        // Retazos / Sobrantes aprovechables
+        let svgRetazos = "";
+        sheet.retazos.forEach(r => {
+            if (r.w >= 200 && r.h >= 200) {
+                svgRetazos += `
+                    <g class="scrap-piece">
+                        <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" 
+                              fill="rgba(30, 41, 59, 0.45)" stroke="#1E293B" stroke-width="1.5" stroke-dasharray="4,4" />
+                        <text x="${r.x + r.w/2}" y="${r.y + r.h/2}" 
+                              font-family="sans-serif" font-size="${Math.max(12, Math.min(22, r.w/18))}" 
+                              fill="#64748B" text-anchor="middle" dominant-baseline="middle">
+                            Retazo (${r.w}×${r.h}mm)
+                        </text>
+                    </g>
+                `;
+            }
+        });
+
+        card.innerHTML = `
+            <div class="sheet-diagram-head">
+                <div>
+                    <strong style="font-size:1.15rem; color:#F1F5F9;">Plancha #${sheet.numero}</strong>
+                    <span style="color:var(--text-dim); font-size:0.85rem; margin-left:8px;">(${W} × ${H} mm)</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="badge" style="background:rgba(16,185,129,0.18); color:var(--green); border:1px solid rgba(16,185,129,0.35);">
+                        <i class="bi bi-check-circle-fill me-1"></i> ${sheet.aprovechamiento}% Útil
+                    </span>
+                    <span class="badge" style="background:rgba(239,68,68,0.15); color:#EF4444; border:1px solid rgba(239,68,68,0.3);">
+                        ${sheet.merma}% Merma
+                    </span>
+                    <span style="font-size:0.82rem; color:var(--text-dim); font-weight:700;">
+                        ${sheet.num_piezas} cortes
+                    </span>
+                </div>
+            </div>
+            <div class="sheet-svg-wrapper">
+                <svg class="sheet-svg" viewBox="0 0 ${W} ${H}">
+                    <!-- Borde de la plancha madre -->
+                    <rect x="0" y="0" width="${W}" height="${H}" fill="#0E1726" stroke="#334155" stroke-width="4"/>
+                    <!-- Retazos -->
+                    ${svgRetazos}
+                    <!-- Piezas cortadas -->
+                    ${svgPieces}
+                </svg>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+</script>
+{% endblock %}

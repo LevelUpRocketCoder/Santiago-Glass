@@ -429,3 +429,151 @@ def salida_articulos(request, pk):
         'cotizacion': cotizacion,
         'articulos': articulos,
     })
+
+
+from .optimizador_vidrio import optimizar_planchas_vidrio
+import re
+
+def extraer_piezas_de_cotizacion(cotizacion):
+    """Extrae las piezas de vidrio de una cotización para el optimizador."""
+    piezas = []
+    items = cotizacion.items.all()
+    
+    for idx, item in enumerate(items, 1):
+        desc = item.descripcion
+        cant = int(item.cantidad) if item.cantidad >= 1 else 1
+        
+        # Buscar medidas en la descripción (ej: 120x190 o 1.20 x 1.90 o 1200x1900)
+        match = re.search(r'(\d+[\.,]?\d*)\s*[xX*]\s*(\d+[\.,]?\d*)', desc)
+        if match:
+            v1 = float(match.group(1).replace(',', '.'))
+            v2 = float(match.group(2).replace(',', '.'))
+            # Si están en metros, convertir a mm
+            ancho_mm = v1 * 1000 if v1 < 10 else (v1 * 10 if v1 < 100 else v1)
+            alto_mm = v2 * 1000 if v2 < 10 else (v2 * 10 if v2 < 100 else v2)
+        else:
+            # Estimación estándar basada en m2
+            m2 = float(item.cantidad)
+            ancho_mm = 1200.0
+            alto_mm = round((m2 / 1.2) * 1000, 0) if m2 > 0 else 1000.0
+            if alto_mm > 2400:
+                alto_mm = 1800.0
+                ancho_mm = round((m2 / 1.8) * 1000, 0)
+        
+        # Cada ventana corrediza típicamente se compone de 2 hojas de vidrio
+        hoja_ancho = round(ancho_mm / 2 + 25, 0) # traslape de 25-30 mm
+        hoja_alto = round(alto_mm - 50, 0)     # descuento de perfilería
+
+        piezas.append({
+            'label': f"It.{idx} Fija ({item.producto.nombre if item.producto else 'Vidrio'})",
+            'ancho': hoja_ancho,
+            'alto': hoja_alto,
+            'cantidad': cant,
+            'desc': f"{item.descripcion[:30]}"
+        })
+        piezas.append({
+            'label': f"It.{idx} Móvil ({item.producto.nombre if item.producto else 'Vidrio'})",
+            'ancho': hoja_ancho,
+            'alto': hoja_alto,
+            'cantidad': cant,
+            'desc': f"{item.descripcion[:30]}"
+        })
+
+    if not piezas:
+        # Piezas de ejemplo si la cotización no tiene ítems
+        piezas = [
+            {'label': 'Ventana V1-Fija', 'ancho': 1180, 'alto': 1350, 'cantidad': 2, 'desc': 'Vidrio 8mm'},
+            {'label': 'Ventana V1-Móvil', 'ancho': 1180, 'alto': 1350, 'cantidad': 2, 'desc': 'Vidrio 8mm'},
+            {'label': 'Box Baño Fijo', 'ancho': 600, 'alto': 1880, 'cantidad': 1, 'desc': 'Templado 8mm'},
+            {'label': 'Box Baño Corredizo', 'ancho': 620, 'alto': 1880, 'cantidad': 1, 'desc': 'Templado 8mm'}
+        ]
+    return piezas
+
+@login_required
+def optimizador_vidrio(request):
+    """Optimizador interactivo de planchas de vidrio 2D."""
+    piezas_iniciales = [
+        {'label': 'V1 - Paño Fijo', 'ancho': 1180, 'alto': 1350, 'cantidad': 2, 'desc': 'Vidrio Float 8mm'},
+        {'label': 'V1 - Hoja Móvil', 'ancho': 1180, 'alto': 1350, 'cantidad': 2, 'desc': 'Vidrio Float 8mm'},
+        {'label': 'Box Baño Fijo', 'ancho': 600, 'alto': 1880, 'cantidad': 1, 'desc': 'Templado Incoloro'},
+        {'label': 'Box Baño Puerta', 'ancho': 620, 'alto': 1880, 'cantidad': 1, 'desc': 'Templado Incoloro'},
+        {'label': 'Ventana Cocina', 'ancho': 550, 'alto': 780, 'cantidad': 2, 'desc': 'Simple 4mm'}
+    ]
+    
+    ancho_plancha = 3600.0
+    alto_plancha = 2400.0
+    margen = 4.0
+    permitir_rotacion = True
+
+    resultado = optimizar_planchas_vidrio(
+        piezas_iniciales,
+        ancho_plancha=ancho_plancha,
+        alto_plancha=alto_plancha,
+        margen_corte=margen,
+        permitir_rotacion=permitir_rotacion
+    )
+
+    return render(request, 'cotizaciones/optimizador_vidrio.html', {
+        'resultado': resultado,
+        'resultado_json': json.dumps(resultado),
+        'piezas_json': json.dumps(piezas_iniciales),
+        'ancho_plancha': ancho_plancha,
+        'alto_plancha': alto_plancha,
+        'margen': margen,
+        'permitir_rotacion': permitir_rotacion,
+        'cotizacion': None
+    })
+
+@login_required
+def optimizador_vidrio_cotizacion(request, pk):
+    """Optimizador precargado con los vidrios de una cotización específica."""
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+    piezas_cotiz = extraer_piezas_de_cotizacion(cotizacion)
+    
+    ancho_plancha = 3600.0
+    alto_plancha = 2400.0
+    margen = 4.0
+    permitir_rotacion = True
+
+    resultado = optimizar_planchas_vidrio(
+        piezas_cotiz,
+        ancho_plancha=ancho_plancha,
+        alto_plancha=alto_plancha,
+        margen_corte=margen,
+        permitir_rotacion=permitir_rotacion
+    )
+
+    return render(request, 'cotizaciones/optimizador_vidrio.html', {
+        'resultado': resultado,
+        'resultado_json': json.dumps(resultado),
+        'piezas_json': json.dumps(piezas_cotiz),
+        'ancho_plancha': ancho_plancha,
+        'alto_plancha': alto_plancha,
+        'margen': margen,
+        'permitir_rotacion': permitir_rotacion,
+        'cotizacion': cotizacion
+    })
+
+@login_required
+def api_optimizar_vidrio(request):
+    """API AJAX para recalcular el plano de corte en tiempo real."""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            piezas = data.get('piezas', [])
+            ancho_plancha = float(data.get('ancho_plancha', 3600))
+            alto_plancha = float(data.get('alto_plancha', 2400))
+            margen = float(data.get('margen', 4))
+            permitir_rotacion = bool(data.get('permitir_rotacion', True))
+
+            resultado = optimizar_planchas_vidrio(
+                piezas,
+                ancho_plancha=ancho_plancha,
+                alto_plancha=alto_plancha,
+                margen_corte=margen,
+                permitir_rotacion=permitir_rotacion
+            )
+            return JsonResponse({'status': 'ok', 'data': resultado})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)

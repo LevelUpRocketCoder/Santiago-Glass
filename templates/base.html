@@ -102,6 +102,15 @@
                     <span class="sidebar-item-badge">PRO</span>
                 </a>
 
+                <!-- Optimizador de Planchas de Vidrio 2D -->
+                <a href="{% url 'optimizador_vidrio' %}" 
+                   class="sidebar-item {% if 'optimizador-vidrio' in request.path %}active{% endif %}" 
+                   data-tooltip="Optimizador de Planchas de Vidrio 2D">
+                    <i class="bi bi-aspect-ratio sidebar-item-icon"></i>
+                    <span class="sidebar-item-label">Cortes de Vidrio 2D</span>
+                    <span class="sidebar-item-badge" style="color:#F59E0B; border-color:rgba(245,158,11,0.4); background:rgba(245,158,11,0.15);">CORTE</span>
+                </a>
+
                 <!-- Despiece y Salida de Taller (WinPerfil) -->
                 <a href="{% url 'lista_cotizaciones' %}" 
                    class="sidebar-item {% if 'salida-articulos' in request.path %}active{% endif %}" 

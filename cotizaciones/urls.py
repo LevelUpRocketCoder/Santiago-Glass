@@ -19,4 +19,7 @@ urlpatterns = [
     path('diseno/', views.diseno_wizard, name='diseno_wizard'),
     path('api/dibujo/', views.api_dibujo_ventana, name='api_dibujo'),
     path('api/dibujo_ia/', views.api_dibujo_ia, name='api_dibujo_ia'),
+    path('optimizador-vidrio/', views.optimizador_vidrio, name='optimizador_vidrio'),
+    path('<int:pk>/optimizador-vidrio/', views.optimizador_vidrio_cotizacion, name='optimizador_vidrio_cotizacion'),
+    path('api/optimizar-vidrio/', views.api_optimizar_vidrio, name='api_optimizar_vidrio'),
 ]
