@@ -313,3 +313,119 @@ def api_dibujo_ia(request):
             'svg': f"<svg><text y='20' fill='white'>Error: {str(e)}</text></svg>",
             'interpretacion': "Ocurrió un error al interpretar la solicitud."
         }, status=400)
+
+
+@login_required
+def salida_articulos(request, pk):
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+    items = cotizacion.items.all()
+
+    # Determinar el color RAL predominante de la cotización
+    color_raw = (items.first().color if items.exists() and items.first().color else 'blanco').lower()
+    if 'blanco' in color_raw:
+        ral_color = 'LACADO BLANCO - 9010'
+    elif 'bronce' in color_raw:
+        ral_color = 'BRONCE ANODIZADO - 8014'
+    elif 'negro' in color_raw or 'antracita' in color_raw:
+        ral_color = 'NEGRO MATE - 9005'
+    elif 'mate' in color_raw or 'natural' in color_raw:
+        ral_color = 'ANODIZADO MATE - 0'
+    else:
+        ral_color = 'LACADO BLANCO - 9010'
+
+    # Calcular cantidades técnicas a partir de la cotización
+    total_m2 = sum(float(it.cantidad) for it in items) if items else 4.0
+    num_aberturas = max(1, items.count())
+    
+    ancho_prom = 1.60
+    alto_prom = 1.40
+    hojas_totales = num_aberturas * 2
+
+    longitud_guia_sup = round(ancho_prom * num_aberturas * 2, 2)
+    longitud_guia_inf = round(ancho_prom * num_aberturas * 2, 2)
+    longitud_jambas = round(alto_prom * num_aberturas * 2, 2)
+    longitud_felpa = round((ancho_prom * 2 + alto_prom * 2) * hojas_totales * 1.6, 2)
+    longitud_goma = round((ancho_prom + alto_prom) * 2 * hojas_totales, 2)
+    longitud_espuma = round(ancho_prom * num_aberturas * 4, 2)
+
+    uds_cierres = num_aberturas * 2
+    uds_deflectores = num_aberturas * 2
+    uds_rodamientos = hojas_totales * 2
+
+    articulos = [
+        {
+            'tipo': 'guia_sup',
+            'uds': num_aberturas * 2,
+            'codigo': '4639',
+            'nombre': 'OK GUIA SUPERIOR "T.U."',
+            'nota': 'Perfil superior riel doble reforzado',
+            'ral_int': ral_color,
+            'ral_ext': ral_color,
+            'longitud': f"{longitud_guia_sup} m",
+        },
+        {
+            'tipo': 'cierre',
+            'uds': uds_cierres,
+            'codigo': 'CI92',
+            'nombre': 'Cierre embutido',
+            'nota': 'Mecanismo caracol con traba',
+            'ral_int': ral_color,
+            'ral_ext': ral_color,
+            'longitud': '0 m',
+        },
+        {
+            'tipo': 'deflector',
+            'uds': uds_deflectores,
+            'codigo': 'DF4',
+            'nombre': 'Deflector con trampilla',
+            'nota': 'Tapa desagüe con válvula antiviento',
+            'ral_int': ral_color,
+            'ral_ext': ral_color,
+            'longitud': '0 m',
+        },
+        {
+            'tipo': 'felpa',
+            'uds': 1,
+            'codigo': 'FP75F',
+            'nombre': 'Felpa 7x5 con lámina',
+            'nota': 'Sellado hermético perimetral de hojas',
+            'ral_int': 'SIN TRATAR - 0',
+            'ral_ext': 'SIN TRATAR - 0',
+            'longitud': f"{longitud_felpa} m",
+        },
+        {
+            'tipo': 'goma',
+            'uds': 1,
+            'codigo': 'GO05',
+            'nombre': 'Junta acristalamiento 05',
+            'nota': 'Goma cuña EPDM de alta durabilidad',
+            'ral_int': 'SIN TRATAR - 0',
+            'ral_ext': 'SIN TRATAR - 0',
+            'longitud': f"{longitud_goma} m",
+        },
+        {
+            'tipo': 'espuma',
+            'uds': 1,
+            'codigo': 'JU92',
+            'nombre': 'Junta espuma',
+            'nota': 'Banda autoadhesiva de estanqueidad',
+            'ral_int': 'SIN TRATAR - 0',
+            'ral_ext': 'SIN TRATAR - 0',
+            'longitud': f"{longitud_espuma} m",
+        },
+        {
+            'tipo': 'rodamiento',
+            'uds': uds_rodamientos,
+            'codigo': 'KI701',
+            'nombre': 'Kit ventana con rodamiento',
+            'nota': 'Garruchas con rodamiento a bolas de acero',
+            'ral_int': 'SIN TRATAR - 0',
+            'ral_ext': 'SIN TRATAR - 0',
+            'longitud': '0 m',
+        },
+    ]
+
+    return render(request, 'cotizaciones/salida_articulos.html', {
+        'cotizacion': cotizacion,
+        'articulos': articulos,
+    })

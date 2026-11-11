@@ -5,6 +5,7 @@ urlpatterns = [
     path('', views.lista_cotizaciones, name='lista_cotizaciones'),
     path('nueva/', views.nueva_cotizacion, name='nueva_cotizacion'),
     path('<int:pk>/', views.detalle_cotizacion, name='detalle_cotizacion'),
+    path('<int:pk>/salida-articulos/', views.salida_articulos, name='salida_articulos'),
     path('pdf/<int:pk>/', views.pdf_cotizacion, name='pdf_cotizacion'),
     path('word/<int:pk>/', views.word_cotizacion, name='word_cotizacion'),
     path('pdf/<int:pk>/generar/', views.pdf_cotizacion, name='generar_pdf'),

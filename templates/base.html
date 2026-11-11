@@ -101,6 +101,15 @@
                     <span class="sidebar-item-label">Diseño 3D & IA</span>
                     <span class="sidebar-item-badge">PRO</span>
                 </a>
+
+                <!-- Despiece y Salida de Taller (WinPerfil) -->
+                <a href="{% url 'lista_cotizaciones' %}" 
+                   class="sidebar-item {% if 'salida-articulos' in request.path %}active{% endif %}" 
+                   data-tooltip="Despiece y Salida de Almacén">
+                    <i class="bi bi-scissors sidebar-item-icon"></i>
+                    <span class="sidebar-item-label">Despiece & Salida</span>
+                    <span class="sidebar-item-badge" style="color:#10B981; border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.15);">TALLER</span>
+                </a>
             </nav>
         </div>
 

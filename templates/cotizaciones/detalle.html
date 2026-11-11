@@ -83,9 +83,15 @@
     </div>
     <div class="col-lg-4">
         <div class="d-flex flex-column gap-3">
+            <!-- Botón del Informe de Salida de Artículos (WinPerfil Style) -->
+            <a href="{% url 'salida_articulos' cotizacion.pk %}" class="action-btn" style="border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.1);">
+                <div class="icon-circle" style="background: rgba(245, 158, 11, 0.25); color: #F59E0B;"><i class="bi bi-box-seam-fill"></i></div>
+                <span><strong>Informe de salida de artículos</strong><br><small style="color:var(--text-dim); font-size:0.75rem;">Despiece de taller y almacén (WinPerfil)</small></span>
+            </a>
+
             <a href="{% url 'pdf_cotizacion' cotizacion.pk %}" target="_blank" class="action-btn">
                 <div class="icon-circle icon-pdf"><i class="bi bi-filetype-pdf"></i></div>
-                <span>Imprimir / PDF</span>
+                <span>Imprimir Cotización / PDF</span>
             </a>
             <a href="{% url 'word_cotizacion' cotizacion.pk %}" class="action-btn">
                 <div class="icon-circle icon-word"><i class="bi bi-file-earmark-word"></i></div>
