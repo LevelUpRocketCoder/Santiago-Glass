@@ -8,8 +8,8 @@
 <!-- Tarjetas de Estadísticas -->
 <div class="grid-4 fade-in">
     <!-- Stat 1 -->
-    <div class="stat-card" style="--hover-color: var(--blue); --hover-glow: rgba(59, 130, 246, 0.4);">
-        <div class="stat-icon" style="color: var(--blue); background: rgba(59, 130, 246, 0.1);">
+    <div class="stat-card" style="--hover-color: var(--blue); --hover-glow: var(--blue-glow);">
+        <div class="stat-icon" style="color: var(--blue); background: rgba(61, 78, 114, 0.25);">
             <i class="bi bi-people"></i>
         </div>
         <div class="stat-title">Total Clientes</div>
@@ -17,7 +17,7 @@
     </div>
     <!-- Stat 2 -->
     <div class="stat-card" style="--hover-color: var(--red); --hover-glow: var(--red-glow);">
-        <div class="stat-icon" style="color: var(--red); background: rgba(244, 63, 94, 0.1);">
+        <div class="stat-icon" style="color: var(--red); background: rgba(175, 88, 59, 0.2);">
             <i class="bi bi-file-earmark-text"></i>
         </div>
         <div class="stat-title">Cotizaciones del Mes</div>
@@ -25,15 +25,15 @@
     </div>
     <!-- Stat 3 -->
     <div class="stat-card" style="--hover-color: var(--gold); --hover-glow: var(--gold-glow);">
-        <div class="stat-icon" style="color: var(--gold); background: rgba(251, 191, 36, 0.1);">
+        <div class="stat-icon" style="color: var(--gold); background: rgba(212, 200, 202, 0.2);">
             <i class="bi bi-clock-history"></i>
         </div>
         <div class="stat-title">Proyectos Pendientes</div>
         <div class="stat-val">{{ stats.proyectos_pendientes }}</div>
     </div>
     <!-- Stat 4 -->
-    <div class="stat-card" style="--hover-color: var(--green); --hover-glow: rgba(16, 185, 129, 0.4);">
-        <div class="stat-icon" style="color: var(--green); background: rgba(16, 185, 129, 0.1);">
+    <div class="stat-card" style="--hover-color: var(--green); --hover-glow: var(--green-glow);">
+        <div class="stat-icon" style="color: var(--green); background: rgba(76, 165, 133, 0.2);">
             <i class="bi bi-check-circle"></i>
         </div>
         <div class="stat-title">Proyectos Finalizados</div>
@@ -93,7 +93,7 @@
                     </div>
                 </a>
                 <a href="{% url 'nuevo_cliente' %}" class="action-card">
-                    <div class="action-icon" style="color: var(--blue); background: rgba(59,130,246,0.1);"><i class="bi bi-person-plus"></i></div>
+                    <div class="action-icon" style="color: var(--blue); background: rgba(61, 78, 114, 0.25);"><i class="bi bi-person-plus"></i></div>
                     <div class="action-info">
                         <strong>Nuevo Cliente</strong>
                         <span>Registrar en base de datos</span>
@@ -125,10 +125,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 datasets: [{
                     data: [{{ stats.proy_curso|default:0 }}, {{ stats.proy_pendientes|default:0 }}, {{ stats.proy_aprobados|default:0 }}],
                     backgroundColor: [
-                        '#fbbf24', // gold
-                        '#94a3b8', // slate
-                        '#34d399'  // green
+                        '#AF583B', // Terracota Némesis
+                        '#3D4E72', // Azul Pizarra Némesis
+                        '#D4C8CA'  // Tiza Rosácea Némesis
                     ],
+                    borderColor: '#1D3460',
                     borderWidth: 0,
                     hoverOffset: 4
                 }]
@@ -138,7 +139,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 maintainAspectRatio: false,
                 cutout: '75%',
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: '#f8fafc', font: { family: 'Inter' } } }
+                    legend: { position: 'bottom', labels: { color: '#D4C8CA', font: { family: 'Outfit, Inter, sans-serif' } } }
                 }
             }
         });
@@ -146,4 +147,5 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 {% endblock %}
-
+
+
