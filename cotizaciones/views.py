@@ -137,12 +137,12 @@ def word_cotizacion(request, pk):
     run = p.add_run("SANTIAGO GLASS")
     run.bold = True
     run.font.size = Pt(20)
-    run.font.color.rgb = RGBColor(29, 52, 96)
+    run.font.color.rgb = RGBColor(11, 20, 38)
 
     p_contact = document.add_paragraph()
     run_c = p_contact.add_run("Celular: 79142535   67064233 LA PAZ-BOLIVIA")
     run_c.font.size = Pt(9)
-    run_c.font.color.rgb = RGBColor(175, 88, 59)
+    run_c.font.color.rgb = RGBColor(245, 158, 11)
     run_c.bold = True
 
     document.add_paragraph(f"CLIENTE: {cotizacion.cliente.nombre_completo.upper()}")
@@ -167,7 +167,7 @@ def word_cotizacion(request, pk):
         from docx.oxml.ns import qn
         from docx.oxml import OxmlElement
         shading = OxmlElement('w:shd')
-        shading.set(qn('w:fill'), '1D3460')
+        shading.set(qn('w:fill'), '111C2E')
         hdr_cells[i]._tc.get_or_add_tcPr().append(shading)
 
     for idx, item in enumerate(items, 1):

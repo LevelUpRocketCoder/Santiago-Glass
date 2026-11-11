@@ -5,7 +5,7 @@
 <style>
     .profile-banner {
         background: linear-gradient(135deg, var(--nemesis-midnight) 0%, var(--nemesis-slate) 60%, var(--nemesis-terracotta) 100%);
-        border: 1px solid rgba(212, 200, 202, 0.2);
+        border: 1px solid var(--border);
         border-radius: var(--radius); padding: 2.2rem; text-align: center; color: white;
         box-shadow: var(--shadow);
     }
@@ -14,7 +14,7 @@
         background: var(--nemesis-terracotta); color: white;
         display: inline-flex; align-items: center; justify-content: center;
         font-size: 2rem; font-weight: 800; font-family: var(--font-head);
-        box-shadow: 0 4px 15px var(--primary-glow); border: 3px solid rgba(212, 200, 202, 0.3);
+        box-shadow: 0 4px 15px var(--primary-glow); border: 3px solid var(--border);
         margin-bottom: 0.8rem;
     }
     .profile-body { padding: 1.5rem; }
@@ -27,13 +27,13 @@
     .hist-table th {
         padding: 0.85rem 1.25rem; font-size: 0.72rem; text-transform: uppercase;
         letter-spacing: 0.08em; color: var(--nemesis-rose); font-weight: 700;
-        background: rgba(61, 78, 114, 0.35); border-bottom: 1px solid var(--border);
+        background: rgba(22, 35, 59, 0.6); border-bottom: 1px solid var(--border);
     }
     .hist-table td {
         padding: 0.95rem 1.25rem; font-size: 0.9rem; border-bottom: 1px solid var(--border);
         color: #ffffff;
     }
-    .hist-table tbody tr:hover { background: rgba(61, 78, 114, 0.25); }
+    .hist-table tbody tr:hover { background: rgba(30, 41, 59, 0.45); }
 </style>
 {% endblock %}
 {% block content %}

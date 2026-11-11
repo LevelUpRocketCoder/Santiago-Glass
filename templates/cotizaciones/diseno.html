@@ -14,7 +14,7 @@ body { overflow: hidden; margin: 0; }
     left: var(--sidebar-w, 260px);
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at center, #3D4E72 0%, #0f1a30 100%);
+    background: radial-gradient(circle at center, #1E293B 0%, #0B1426 100%);
     z-index: 1;
     overflow: hidden;
     transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
@@ -38,9 +38,9 @@ body { overflow: hidden; margin: 0; }
     top: calc(var(--topbar-h, 68px) + 16px);
     left: calc(var(--sidebar-w, 260px) + 16px);
     width: 440px;
-    background: rgba(29, 52, 96, 0.92);
+    background: rgba(17, 28, 46, 0.95);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid #1E293B;
     border-radius: 20px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85);
     z-index: 10;
@@ -63,25 +63,25 @@ body { overflow: hidden; margin: 0; }
 .panel-flotante::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
 
 .panel-header { padding: 1.2rem 1.5rem 0.8rem 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-.panel-header h2 { margin: 0; font-size: 1.4rem; color: var(--nemesis-rose); font-weight: 800; display:flex; align-items:center; gap:8px;}
+.panel-header h2 { margin: 0; font-size: 1.4rem; color: #94A3B8; font-weight: 800; display:flex; align-items:center; gap:8px;}
 .panel-body { padding: 1.2rem 1.5rem 1.5rem 1.5rem; }
 
 /* BOTONES RAPIDOS */
 .btn-rapidos { display: flex; gap: 6px; margin-bottom: 12px; }
-.btn-rapido { flex: 1; background: rgba(175,88,59,0.15); border: 1px solid rgba(175,88,59,0.3); color: var(--nemesis-rose); padding: 7px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 0.82rem; font-weight:600;}
+.btn-rapido { flex: 1; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: #94A3B8; padding: 7px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 0.82rem; font-weight:600;}
 .btn-rapido:hover { background: rgba(175,88,59,0.3); }
 
 /* PROMPT IA */
 .ia-prompt-box {
-    background: rgba(0,0,0,0.55); border: 2px solid #AF583B; border-radius: 12px;
-    padding: 12px; margin-bottom: 14px; box-shadow: 0 0 15px rgba(175, 88, 59, 0.18);
+    background: rgba(0,0,0,0.55); border: 2px solid #F59E0B; border-radius: 12px;
+    padding: 12px; margin-bottom: 14px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
 }
 .ia-prompt-box textarea {
     width: 100%; background: transparent; border: none; color: white;
     font-size: 1rem; resize: none; outline: none; font-family: inherit;
 }
 .btn-ia {
-    background: linear-gradient(135deg, #AF583B, #3D4E72); color: white; border: none; padding: 10px; width: 100%;
+    background: linear-gradient(135deg, #F59E0B, #D97706); color: #0B1426; font-weight: 800; border: none; padding: 10px; width: 100%;
     border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
     margin-top: 8px; transition: transform 0.2s;
 }
@@ -89,12 +89,12 @@ body { overflow: hidden; margin: 0; }
 
 /* CONFIRMACION IA */
 .ia-confirmacion {
-    display: none; background: rgba(76, 165, 133, 0.15); border: 1px solid #4ca585; border-radius: 12px;
+    display: none; background: rgba(16, 185, 129, 0.12); border: 1px solid #10B981; border-radius: 12px;
     padding: 12px; margin-bottom: 14px;
 }
 .ia-confirmacion p { color: #D4C8CA; font-size: 0.9rem; margin-bottom: 8px; font-weight:bold; line-height:1.4;}
-.ia-confirmacion .btn-ok { background: #AF583B; color: white; border: none; padding: 6px 14px; border-radius: 7px; font-weight: bold; cursor: pointer; }
-.ia-confirmacion .btn-fix { background: transparent; border: 1px solid #3D4E72; color: #D4C8CA; padding: 6px 14px; border-radius: 7px; font-weight: bold; cursor: pointer; margin-left: 5px;}
+.ia-confirmacion .btn-ok { background: #F59E0B; color: #0B1426; border: none; padding: 6px 14px; border-radius: 7px; font-weight: bold; cursor: pointer; }
+.ia-confirmacion .btn-fix { background: transparent; border: 1px solid #1E293B; color: #94A3B8; padding: 6px 14px; border-radius: 7px; font-weight: bold; cursor: pointer; margin-left: 5px;}
 
 /* PESTAÑAS DEL PANEL */
 .panel-tabs {
@@ -105,13 +105,13 @@ body { overflow: hidden; margin: 0; }
     color: var(--text-dim); padding: 8px 6px; border-radius: 8px; cursor: pointer;
     font-size: 0.8rem; font-weight: 700; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
 }
-.panel-tab:hover { background: rgba(175,88,59,0.15); color: var(--nemesis-rose); }
-.panel-tab.active { background: rgba(175,88,59,0.25); border-color: var(--nemesis-rose); color: white; }
+.panel-tab:hover { background: rgba(175,88,59,0.15); color: #94A3B8; }
+.panel-tab.active { background: rgba(175,88,59,0.25); border-color: #94A3B8; color: white; }
 
 .dot-status { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.dot-verde { background: #4ca585; box-shadow: 0 0 6px rgba(76, 165, 133, 0.6); }
-.dot-amarillo { background: #D4C8CA; box-shadow: 0 0 6px rgba(212, 200, 202, 0.6); }
-.dot-rojo { background: #AF583B; box-shadow: 0 0 6px rgba(175, 88, 59, 0.6); }
+.dot-verde { background: #10B981; box-shadow: 0 0 8px #10B981; }
+.dot-amarillo { background: #F59E0B; box-shadow: 0 0 8px #F59E0B; }
+.dot-rojo { background: #EF4444; box-shadow: 0 0 8px #EF4444; }
 
 .badge-mini {
     background: rgba(212,200,202,0.2); color: var(--gold); font-size: 0.72rem; padding: 1px 6px; border-radius: 4px; font-weight: 800;
@@ -142,10 +142,10 @@ body { overflow: hidden; margin: 0; }
 .badge-tag {
     font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
 }
-.tag-verde { background: rgba(76,165,133,0.2); color: #8cd6bc; border: 1px solid rgba(76,165,133,0.4); }
-.tag-amarillo { background: rgba(212,200,202,0.18); color: #D4C8CA; border: 1px solid rgba(212,200,202,0.35); }
-.tag-rojo { background: rgba(175,88,59,0.2); color: #f09579; border: 1px solid rgba(175,88,59,0.4); }
-.tag-gold { background: rgba(212,200,202,0.18); color: #D4C8CA; border: 1px solid rgba(212,200,202,0.35); }
+.tag-verde { background: rgba(16,185,129,0.15); color: #10B981; border: 1px solid rgba(16,185,129,0.35); }
+.tag-amarillo { background: rgba(245,158,11,0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.35); }
+.tag-rojo { background: rgba(239,68,68,0.15); color: #EF4444; border: 1px solid rgba(239,68,68,0.35); }
+.tag-gold { background: rgba(245,158,11,0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.35); }
 
 .metrics-grid {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px;
@@ -183,11 +183,11 @@ body { overflow: hidden; margin: 0; }
 }
 .corte-item:hover { background: rgba(175,88,59,0.1); border-color: rgba(175,88,59,0.3); }
 .corte-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.corte-code { background: rgba(175,88,59,0.18); color: var(--nemesis-rose); font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+.corte-code { background: rgba(245,158,11,0.18); color: #94A3B8; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
 .corte-desc { font-weight: 700; font-size: 0.8rem; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .corte-formula { font-size: 0.68rem; color: var(--text-dim); display: block; }
 .corte-badge-cant { background: rgba(255,255,255,0.08); color: #cbd5e1; font-size: 0.72rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-right: 4px; }
-.corte-dim { font-family: var(--font-head); font-weight: 800; font-size: 0.88rem; color: var(--nemesis-rose); white-space: nowrap; }
+.corte-dim { font-family: var(--font-head); font-weight: 800; font-size: 0.88rem; color: #94A3B8; white-space: nowrap; }
 .corte-ang { font-size: 0.68rem; color: #94a3b8; margin-left: 4px; }
 
 .banner-resumen-tecnico {
@@ -200,7 +200,7 @@ body { overflow: hidden; margin: 0; }
 /* TARJETA PRECIO SUPERIOR DERECHA */
 .tarjeta-precio {
     position: fixed; top: 90px; right: 20px;
-    background: rgba(29, 52, 96, 0.92); backdrop-filter: blur(16px);
+    background: rgba(17, 28, 46, 0.95); backdrop-filter: blur(16px);
     border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85); z-index: 10; padding: 1.4rem; 
     display: flex; flex-direction: column; align-items: center; gap: 14px;
@@ -210,12 +210,12 @@ body { overflow: hidden; margin: 0; }
 .precio-lbl { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 4px; }
 .precio-val { font-size: 2rem; font-family: var(--font-head); font-weight: 800; margin: 0; }
 .divisor { width: 100%; height: 1px; background: rgba(255,255,255,0.1); }
-.btn-guardar { width: 100%; background: var(--gold); color: black; border: none; padding: 14px 0; font-size: 1.05rem; font-weight: 800; border-radius: 12px; cursor: pointer; transition: 0.2s; }
+.btn-guardar { width: 100%; background: #F59E0B; color: #0B1426; border: none; padding: 14px 0; font-size: 1.05rem; font-weight: 800; border-radius: 12px; cursor: pointer; transition: 0.2s; }
 .btn-guardar:hover { transform: scale(1.03); }
 
 #ia-loading {
     position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(15, 23, 42, 0.92); z-index: 100;
-    display: none; justify-content: center; align-items: center; flex-direction: column; color: var(--nemesis-rose); font-size: 1.3rem; font-weight: bold; border-radius: 20px;
+    display: none; justify-content: center; align-items: center; flex-direction: column; color: #94A3B8; font-size: 1.3rem; font-weight: bold; border-radius: 20px;
 }
 </style>
 
@@ -251,7 +251,7 @@ body { overflow: hidden; margin: 0; }
             <div>
                 <button class="btn-ok" onclick="aceptarModelo()"><i class="bi bi-check-lg"></i> Está bien</button>
                 <button class="btn-fix" onclick="corregirModelo()"><i class="bi bi-pencil"></i> Corregir</button>
-                <button class="btn-fix" onclick="resetCamara()" style="color:#AF583B; border-color:#AF583B;"><i class="bi bi-camera-video"></i> Centrar</button>
+                <button class="btn-fix" onclick="resetCamara()" style="color:#F59E0B; border-color:#F59E0B;"><i class="bi bi-camera-video"></i> Centrar</button>
                 <button class="btn-fix" onclick="enfocarHerrajes()" style="color:var(--gold); border-color:var(--gold);"><i class="bi bi-tools"></i> Ver Seguro/Tornillos</button>
             </div>
         </div>
@@ -261,7 +261,7 @@ body { overflow: hidden; margin: 0; }
             <button class="panel-tab active" id="tab-btn-medidas" onclick="switchTab('medidas')"><i class="bi bi-sliders"></i> Medidas</button>
             <button class="panel-tab" id="tab-btn-seguridad" onclick="switchTab('seguridad')"><i class="bi bi-shield-check"></i> Seguridad <span id="badge-seguridad-dot" class="dot-status dot-verde"></span></button>
             <button class="panel-tab" id="tab-btn-herrajes" onclick="switchTab('herrajes')"><i class="bi bi-tools"></i> Herrajes <span id="badge-tornillos-cnt" class="badge-mini">0</span></button>
-            <button class="panel-tab" id="tab-btn-perfiles" onclick="switchTab('perfiles')"><i class="bi bi-bounding-box"></i> Perfiles & Corte <span id="badge-barras-cnt" class="badge-mini" style="color:#AF583B; background:rgba(175,88,59,0.25);">0 b</span></button>
+            <button class="panel-tab" id="tab-btn-perfiles" onclick="switchTab('perfiles')"><i class="bi bi-bounding-box"></i> Perfiles & Corte <span id="badge-barras-cnt" class="badge-mini" style="color:#F59E0B; background:rgba(175,88,59,0.25);">0 b</span></button>
         </div>
 
         <!-- TAB 1: MEDIDAS Y PRECIO -->
@@ -285,7 +285,7 @@ body { overflow: hidden; margin: 0; }
             </div>
 
             <!-- PRECIO AL CAMBIO OFICIAL MOVIDO A LA IZQUIERDA -->
-            <div style="background: rgba(76, 165, 133, 0.15); border: 1px solid rgba(76, 165, 133, 0.35); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; box-shadow: 0 4px 15px rgba(76, 165, 133, 0.1);">
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(76, 165, 133, 0.35); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; box-shadow: 0 4px 15px rgba(76, 165, 133, 0.1);">
                 <div>
                     <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); font-weight: 700; display:block;">CAMBIO OFICIAL</span>
                     <span style="font-size: 0.75rem; color: #94a3b8;">1 $us = <span id="tc-valor-lbl">6.97</span> Bs</span>
@@ -306,7 +306,7 @@ body { overflow: hidden; margin: 0; }
         <!-- TAB 2: DIAGNÓSTICO ESTRUCTURAL, TÉRMICO Y ACÚSTICO (DLUBAL & ONVENTANAS) -->
         <div id="tab-seguridad" class="tab-content">
             <!-- 1. Seguridad Estructural ASTM E1300 / Dlubal -->
-            <div class="card-tecnica" id="card-estructural-box" style="border-left: 4px solid #3D4E72;">
+            <div class="card-tecnica" id="card-estructural-box" style="border-left: 4px solid #10B981;">
                 <div class="card-tecnica-head">
                     <div class="card-tecnica-title">
                         <span id="est-icono-dot" class="dot-status dot-verde"></span>
@@ -334,19 +334,19 @@ body { overflow: hidden; margin: 0; }
             </div>
 
             <!-- 2. Rendimiento Térmico, Acústico y Peso (Criterio OnVentanas / EN 673) -->
-            <div class="card-tecnica" style="border-left: 4px solid #AF583B; margin-top:10px;">
+            <div class="card-tecnica" style="border-left: 4px solid #F59E0B; margin-top:10px;">
                 <div class="card-tecnica-head">
-                    <div class="card-tecnica-title" style="color:#AF583B;">
+                    <div class="card-tecnica-title" style="color:#F59E0B;">
                         <i class="bi bi-thermometer-snow"></i>
                         <span id="vid-tipo-nombre">Vidrio Monolítico 6 mm</span>
                     </div>
-                    <span id="vid-clase-badge" class="badge-tag" style="background:rgba(175,88,59,0.18); color:#AF583B; border:1px solid rgba(175,88,59,0.35);">Clase F</span>
+                    <span id="vid-clase-badge" class="badge-tag" style="background:rgba(245,158,11,0.18); color:#F59E0B; border:1px solid rgba(175,88,59,0.35);">Clase F</span>
                 </div>
 
                 <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr); margin-top:8px;">
                     <div class="metric-mini">
                         <span class="m-lbl">Transmit. Ug</span>
-                        <span id="vid-ug-val" class="m-val" style="color:#AF583B;">5.7</span>
+                        <span id="vid-ug-val" class="m-val" style="color:#F59E0B;">5.7</span>
                         <span style="font-size:0.6rem; color:#94a3b8;">W/m²K</span>
                     </div>
                     <div class="metric-mini">
@@ -356,7 +356,7 @@ body { overflow: hidden; margin: 0; }
                     </div>
                     <div class="metric-mini">
                         <span class="m-lbl">Factor Solar g</span>
-                        <span id="vid-g-val" class="m-val" style="color:#AF583B;">82%</span>
+                        <span id="vid-g-val" class="m-val" style="color:#F59E0B;">82%</span>
                         <span style="font-size:0.6rem; color:#94a3b8;">calor solar</span>
                     </div>
                     <div class="metric-mini">
@@ -400,20 +400,20 @@ body { overflow: hidden; margin: 0; }
 
         <!-- TAB 4: PERFILES DE ALUMINIO Y OPTIMIZACIÓN DE CORTE (LUMINIO) -->
         <div id="tab-perfiles" class="tab-content">
-            <div class="card-tecnica" style="border-left: 4px solid #AF583B;">
+            <div class="card-tecnica" style="border-left: 4px solid #F59E0B;">
                 <div class="card-tecnica-head">
-                    <div class="card-tecnica-title" style="color:#AF583B;">
+                    <div class="card-tecnica-title" style="color:#F59E0B;">
                         <i class="bi bi-bounding-box"></i>
                         <span id="prf-serie-titulo">Serie 30 (Estándar)</span>
                     </div>
-                    <span id="prf-color-badge" class="badge-tag" style="background:rgba(175,88,59,0.18); color:#AF583B; border:1px solid rgba(175,88,59,0.35);">Antracita</span>
+                    <span id="prf-color-badge" class="badge-tag" style="background:rgba(245,158,11,0.18); color:#F59E0B; border:1px solid rgba(175,88,59,0.35);">Antracita</span>
                 </div>
                 
                 <!-- Grilla de optimización de barras -->
                 <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr); margin-top:8px;">
                     <div class="metric-mini">
                         <span class="m-lbl">Barras 6m</span>
-                        <span id="prf-barras-6m" class="m-val" style="color:#AF583B;">3</span>
+                        <span id="prf-barras-6m" class="m-val" style="color:#F59E0B;">3</span>
                     </div>
                     <div class="metric-mini">
                         <span class="m-lbl">M. Útiles</span>
@@ -421,7 +421,7 @@ body { overflow: hidden; margin: 0; }
                     </div>
                     <div class="metric-mini">
                         <span class="m-lbl">Merma</span>
-                        <span id="prf-merma-pct" class="m-val" style="color:#AF583B;">28%</span>
+                        <span id="prf-merma-pct" class="m-val" style="color:#F59E0B;">28%</span>
                     </div>
                     <div class="metric-mini">
                         <span class="m-lbl">Peso Est.</span>
@@ -433,11 +433,11 @@ body { overflow: hidden; margin: 0; }
                 <div style="margin-top:10px;">
                     <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-dim); margin-bottom:3px;">
                         <span>Aprovechamiento: <strong id="prf-aprov-txt" style="color:#D4C8CA;">72%</strong></span>
-                        <span>Retazo: <strong id="prf-retazo-txt" style="color:#AF583B;">5.2 m</strong></span>
+                        <span>Retazo: <strong id="prf-retazo-txt" style="color:#F59E0B;">5.2 m</strong></span>
                     </div>
                     <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; display:flex;">
-                        <div id="prf-bar-util" style="width:72%; height:100%; background:#3D4E72;"></div>
-                        <div id="prf-bar-merma" style="width:28%; height:100%; background:#AF583B;"></div>
+                        <div id="prf-bar-util" style="width:72%; height:100%; background:#10B981;"></div>
+                        <div id="prf-bar-merma" style="width:28%; height:100%; background:#F59E0B;"></div>
                     </div>
                 </div>
 
@@ -445,7 +445,7 @@ body { overflow: hidden; margin: 0; }
                 <div style="margin-top:12px;">
                     <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); font-weight:700; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
                         <span>📋 Lista de Cortes (Taller)</span>
-                        <span id="prf-total-piezas" style="color:#AF583B; font-weight:800;">12 piezas</span>
+                        <span id="prf-total-piezas" style="color:#F59E0B; font-weight:800;">12 piezas</span>
                     </div>
                     <div id="prf-lista-cortes" class="cortes-lista">
                         <!-- Filas de corte generadas dinámicamente -->
@@ -570,13 +570,13 @@ function buildEnvironment() {
 }
 
 function drawDimensionLine(start, end, axis) {
-    const material = new THREE.LineBasicMaterial({ color: 0xD4C8CA, linewidth: 2, depthTest: false });
+    const material = new THREE.LineBasicMaterial({ color: 0xF59E0B, linewidth: 2, depthTest: false });
     const points = [start, end];
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
     const line = new THREE.Line(geometry, material);
     line.renderOrder = 999;
     
-    const tickMat = new THREE.LineBasicMaterial({ color: 0xD4C8CA, linewidth: 2, depthTest: false });
+    const tickMat = new THREE.LineBasicMaterial({ color: 0xF59E0B, linewidth: 2, depthTest: false });
     const tSize = 0.05;
     
     let t1p1, t1p2, t2p1, t2p2;
@@ -912,7 +912,7 @@ function build3DModel(datos) {
                     // Botón/traba de seguro en rojo vivo para resaltar
                     const lockSwitch = new THREE.Mesh(
                         new THREE.BoxGeometry(0.012, 0.03, 0.042),
-                        new THREE.MeshStandardMaterial({ color: 0xAF583B, metalness: 0.5, roughness: 0.2 })
+                        new THREE.MeshStandardMaterial({ color: 0xF59E0B, metalness: 0.5, roughness: 0.2 })
                     );
                     lockSwitch.position.set(0, 0.01, 0.006);
                     const latch = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.022, 0.02), chromeMat);
